@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StatIntroR</title>
+<meta name="description" content="Animated, step-by-step walkthroughs of statistical methods in R, built on real course data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;600;700&family=Spectral:wght@500;600&display=swap">
+<style>
+/* Same bench as the walkthrough pages: stone background, ink text, cobalt and green accents. */
+:root{
+  color-scheme:light;
+  --bg:#ECEFEB; --surface:#F8F9F6; --ink:#1B2220; --muted:#58635E; --rule:#CBD2CA; --acc:#2443C0; --acc2:#0A7C5F;
+  --display:"Spectral", Georgia, "Times New Roman", serif;
+  --body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#121715; --surface:#1A201E; --ink:#E5EAE7; --muted:#9BA6A1; --rule:#323B37; --acc:#8AA2FF; --acc2:#52C9A3; color-scheme:dark; }
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55}
+.wrap{max-width:900px; margin:0 auto; padding-block:48px 56px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); display:flex; flex-direction:column; gap:28px}
+header{display:flex; flex-direction:column; gap:8px; max-width:62ch}
+.eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+h1{font-family:var(--display); font-weight:600; font-size:clamp(36px, 6vw, 56px); line-height:1.05; margin:0}
+.lede{margin:0; color:var(--muted); font-size:17px}
+ul.pages{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px}
+ul.pages a{display:flex; flex-direction:column; gap:8px; height:100%; padding:20px 20px 22px; border:1px solid var(--rule); border-radius:10px; background:var(--surface); color:var(--ink); text-decoration:none; transition:border-color .2s}
+ul.pages a:hover{border-color:var(--acc)}
+ul.pages a:focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+.week{font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--acc2)}
+h2{font-family:var(--display); font-weight:600; font-size:26px; line-height:1.15; margin:0}
+ul.pages p{margin:0; color:var(--muted); font-size:15px}
+.go{margin-top:auto; padding-top:6px; font-size:15px; font-weight:600; color:var(--acc)}
+footer{font-size:13.5px; color:var(--muted); border-top:1px solid var(--rule); padding-top:14px; max-width:70ch}
+footer p{margin:0}
+@media (prefers-reduced-motion: reduce){ ul.pages a{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">CPSC 442 · Statistics in R</div>
+    <h1>StatIntroR</h1>
+    <p class="lede">Animated, step-by-step walkthroughs of statistical methods in R. Each one uses the real data, seeds and results from the course materials.</p>
+  </header>
+
+  <ul class="pages">
+    <li><a href="pca/">
+      <span class="week">Week 12 · 11 steps</span>
+      <h2>PCA, step by step</h2>
+      <p>How principal components are built from the data, and how to read eigenvalues, the scree plot, scores and loadings. Uses the Romano-British pottery data.</p>
+      <span class="go">Open the walkthrough →</span>
+    </a></li>
+    <li><a href="experimental-design/">
+      <span class="week">Week 13 · 11 steps</span>
+      <h2>Experimental design, step by step</h2>
+      <p>Completely randomized, randomized complete block, Latin square and split-plot designs, Hasse diagrams, contrast coding and planned contrasts.</p>
+      <span class="go">Open the walkthrough →</span>
+    </a></li>
+  </ul>
+
+  <footer>
+    <p>Each page runs in the browser with no installs. Use Next and Back or the arrow keys to move through the steps. Adding #step-3 to a page's address opens step 3 directly.</p>
+  </footer>
+</div>
+</body>
+</html>

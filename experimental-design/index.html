@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light} body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+a.home{font-family:var(--mono); font-size:13px; color:var(--muted); text-decoration:none} a.home:hover{color:var(--ink); text-decoration:underline}</style>
+<title>Experimental Design Step by Step</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;600;700&family=Spectral:wght@500;600&display=swap">
+<style>
+/* Layout: the field on the left, the notebook page on the right. Same bench as the Week 12 PCA page. */
+:root{
+  --bg:#ECEFEB; --surface:#F8F9F6; --ink:#1B2220; --muted:#58635E; --rule:#CBD2CA; --grid:#DFE3DC; --onink:#F8F9F6;
+  --acc:#2443C0; --acc2:#0A7C5F;
+  /* treatment colors follow the pre-lecture palettes: goldenrod, darkgrey, skyblue, firebrick, sand, navy */
+  --ta:#D49B12; --tb:#8C918B; --tc:#5FAEDB; --td:#B0302B; --te:#CDBB93; --tf:#23356E;
+  --on-ta:#1B2220; --on-tb:#1B2220; --on-tc:#1B2220; --on-td:#F8F9F6; --on-te:#1B2220; --on-tf:#F8F9F6;
+  --display:"Spectral", Georgia, "Times New Roman", serif;
+  --body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121715; --surface:#1A201E; --ink:#E5EAE7; --muted:#9BA6A1; --rule:#323B37; --grid:#262E2B; --onink:#121715;
+    --acc:#8AA2FF; --acc2:#52C9A3;
+    --ta:#E2B23A; --tb:#A3A9A2; --tc:#74BDE6; --td:#E0605A; --te:#D9C9A3; --tf:#8EA2E8;
+    --on-ta:#121715; --on-tb:#121715; --on-tc:#121715; --on-td:#121715; --on-te:#121715; --on-tf:#121715;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121715; --surface:#1A201E; --ink:#E5EAE7; --muted:#9BA6A1; --rule:#323B37; --grid:#262E2B; --onink:#121715;
+  --acc:#8AA2FF; --acc2:#52C9A3;
+  --ta:#E2B23A; --tb:#A3A9A2; --tc:#74BDE6; --td:#E0605A; --te:#D9C9A3; --tf:#8EA2E8;
+  --on-ta:#121715; --on-tb:#121715; --on-tc:#121715; --on-td:#121715; --on-te:#121715; --on-tf:#121715;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55}
+.wrap{max-width:1200px; margin:0 auto; padding-block:28px 40px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex; flex-direction:column; gap:22px}
+header{display:flex; flex-direction:column; gap:6px; max-width:70ch}
+.eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+h1{font-family:var(--display); font-weight:600; font-size:clamp(30px, 4.4vw, 44px); line-height:1.08; margin:0; text-wrap:balance}
+.lede{margin:0; color:var(--muted)}
+.bench{display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); gap:28px; align-items:start}
+.stage{margin:0; background:var(--surface); border:1px solid var(--rule); border-radius:8px; padding:10px 10px 12px; position:sticky; top:calc(env(safe-area-inset-top, 0px) + 12px); display:flex; flex-direction:column; gap:6px}
+.stage svg{display:block; width:100%; height:auto}
+.legend{display:flex; flex-wrap:wrap; gap:6px 16px; padding:0 8px; font-size:14px; color:var(--muted); min-height:20px}
+.legend span{display:inline-flex; align-items:center; gap:7px}
+.legend i{width:13px; height:13px; border-radius:3px; display:inline-block}
+.notes{min-width:0; display:flex; flex-direction:column; gap:14px}
+.stepmeta{font-family:var(--mono); font-size:13px; color:var(--muted); letter-spacing:.04em}
+.notes h2{font-family:var(--display); font-weight:600; font-size:clamp(24px, 2.8vw, 30px); line-height:1.15; margin:0; text-wrap:balance}
+#stepbody{display:flex; flex-direction:column; gap:10px; max-width:62ch}
+#stepbody p, #stepbody ul{margin:0}
+#stepbody ul{padding-left:20px; display:flex; flex-direction:column; gap:4px}
+code{font-family:var(--mono); font-size:.86em; background:var(--grid); padding:1px 5px; border-radius:4px}
+.widget{display:flex; flex-direction:column; gap:12px; min-width:0}
+.widget:empty{display:none}
+.panel{border:1px solid var(--rule); background:var(--surface); border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; min-width:0}
+.panel h3{margin:0; font-size:12.5px; font-family:var(--mono); font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.cap{font-size:14px; color:var(--muted); margin:0}
+.model{font-family:var(--display); font-size:22px; line-height:1.3}
+.model span{padding:0 3px; border-radius:4px; transition:background .3s, color .3s}
+.model span.on{background:var(--acc); color:var(--onink)}
+.model span.on2{background:var(--acc2); color:var(--onink)}
+.chips{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px}
+.chips li{font-size:14px; padding:4px 11px; border-radius:999px; border:1px solid var(--rule); color:var(--muted); transition:background .3s, color .3s, border-color .3s}
+.chips li.on{background:var(--ink); color:var(--onink); border-color:var(--ink)}
+.row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.mini svg{display:block; width:100%; height:auto}
+pre.code{margin:0; font-family:var(--mono); font-size:13px; background:var(--grid); padding:8px 10px; border-radius:6px; overflow-x:auto; white-space:pre}
+.num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+table{border-collapse:collapse; width:100%; font-size:14.5px}
+th, td{padding:5px 8px; text-align:right; border-bottom:1px solid var(--rule)}
+th:first-child, td:first-child{text-align:left}
+thead th{font-family:var(--mono); font-weight:500; font-size:12.5px; color:var(--muted); letter-spacing:.03em}
+td.num{font-family:var(--mono)}
+.tablewrap{overflow-x:auto}
+table.mx td, table.mx th{text-align:center; padding:4px 6px; font-family:var(--mono); font-size:13.5px}
+table.mx td:first-child, table.mx th:first-child{text-align:left; font-family:var(--body)}
+table.mx td.t{background:color-mix(in srgb, var(--acc) 22%, transparent); color:var(--ink); font-weight:600}
+table.mx td.f{color:var(--muted)}
+tr.pick{cursor:pointer}
+tr.pick:hover td{background:color-mix(in srgb, var(--ink) 6%, transparent)}
+tr.focus td{background:color-mix(in srgb, var(--acc) 16%, transparent)}
+.cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px}
+.card{border:1px solid var(--rule); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:4px; transition:border-color .3s, background .3s}
+.card.on{border-color:var(--acc); background:color-mix(in srgb, var(--acc) 9%, transparent)}
+.card b{font-size:14px}
+.card .big{font-family:var(--mono); font-size:22px; line-height:1.15}
+.card small{font-size:13px; color:var(--muted)}
+.tabs{display:flex; flex-wrap:wrap; gap:6px}
+.tabs button{padding:6px 11px; font-size:14px; border-color:var(--rule)}
+.tabs button[aria-pressed="true"]{background:var(--ink); color:var(--onink); border-color:var(--ink)}
+.sq{display:grid; grid-template-columns:auto repeat(3, minmax(0,1fr)); gap:4px; font-size:14px}
+.sq div{padding:6px 6px; border-radius:5px; text-align:center}
+.sq .h{color:var(--muted); font-family:var(--mono); font-size:12.5px; padding:6px 4px}
+.sq .c{display:flex; flex-direction:column; line-height:1.2}
+.sq .c small{font-family:var(--mono); font-size:12px; opacity:.85}
+.quiz .q{display:flex; flex-direction:column; gap:6px; padding-bottom:10px; border-bottom:1px solid var(--rule)}
+.quiz .q:last-child{border-bottom:0; padding-bottom:0}
+.quiz p{margin:0}
+.quiz .opts{display:flex; flex-wrap:wrap; gap:6px}
+.quiz .opts button{padding:5px 10px; font-size:14px; border-color:var(--rule)}
+.quiz .opts button.right{background:var(--acc2); border-color:var(--acc2); color:var(--onink)}
+.quiz .opts button.wrong{border-color:var(--td); color:var(--td)}
+.quiz .fb{font-size:14px; color:var(--muted); min-height:0}
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:4px}
+button{font:inherit; font-size:15px; border-radius:6px; padding:8px 16px; cursor:pointer; border:1px solid var(--ink); background:transparent; color:var(--ink)}
+button.primary{background:var(--ink); color:var(--onink)}
+button:disabled{opacity:.35; cursor:default}
+button:focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+.spacer{flex:1}
+.dots{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px}
+.dots button{width:32px; height:32px; padding:0; border-radius:50%; border-color:var(--rule); color:var(--muted); font-family:var(--mono); font-size:13px}
+.dots button[aria-current="step"]{background:var(--acc); border-color:var(--acc); color:var(--onink)}
+footer{font-size:13.5px; color:var(--muted); max-width:84ch; border-top:1px solid var(--rule); padding-top:12px; display:flex; flex-direction:column; gap:6px}
+footer p{margin:0}
+/* SVG marks */
+.slot{fill:none; stroke:var(--rule); stroke-dasharray:4 4}
+.chipt{font:600 15px var(--body)}
+.tick{fill:var(--muted); font:14px var(--mono)}
+.lab{fill:var(--ink); font:600 15px var(--body)}
+.labm{fill:var(--muted); font:500 13px var(--mono)}
+.big{font:600 22px var(--body)}
+.halo{paint-order:stroke; stroke:var(--surface); stroke-width:5px; stroke-linejoin:round}
+.grid{stroke:var(--grid); stroke-width:1}
+.frame{fill:none; stroke:var(--rule)}
+.cell{cursor:pointer}
+@media (max-width: 880px){ .bench{grid-template-columns:minmax(0,1fr)} .stage{position:static} }
+@media (prefers-reduced-motion: reduce){ .chips li, .model span, .card{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="home" href="../">← All StatIntroR walkthroughs</a>
+    <div class="eyebrow">CPSC 442 · Week 13 · Experimental design</div>
+    <h1>Experimental design, step by step</h1>
+    <p class="lede">How completely randomized, block, Latin square and split-plot layouts are built and why, using the data, seeds and layouts from the Week 13 pre-lecture.</p>
+  </header>
+
+  <main class="bench">
+    <figure class="stage">
+      <svg id="stage" viewBox="0 0 600 560" role="img" aria-labelledby="steptitle"></svg>
+      <figcaption id="stagecap" class="legend"></figcaption>
+    </figure>
+
+    <section class="notes" aria-live="polite">
+      <div class="stepmeta">Step <span id="stepnum">1</span> of <span id="stepcount">10</span></div>
+      <h2 id="steptitle"></h2>
+      <div id="stepbody"></div>
+      <div id="widget" class="widget"></div>
+      <div class="controls">
+        <button id="prev" type="button">Back</button>
+        <button id="replay" type="button">Replay</button>
+        <span class="spacer"></span>
+        <button id="next" type="button" class="primary">Next</button>
+      </div>
+      <ol class="dots" id="dots" aria-label="Steps"></ol>
+    </section>
+  </main>
+
+  <footer>
+    <p>Data: <code>ratweight.CRD.csv</code> and <code>cycad_RCBD.csv</code> from the pre-lecture, <code>cochran.latin</code> and <code>stroup.splitplot</code> from <code>agridat</code>, <code>RBPottery</code> from <code>archdata</code>, and <code>Crossover_Latin.csv</code> from the workshop. Layouts come from <code>agricolae</code> with the pre-lecture's seeds. ANOVA numbers come from <code>lm()</code> on these files.</p>
+    <p>The fern treatments are coded 1, 2 and 3 in the file. They are labeled water, spores and oil here, in the order the pre-lecture lists them.</p>
+  </footer>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const seg = (t, a, b) => REDUCED ? 1 : ease(clamp((t - a) / (b - a)));
+const n1 = v => (+v).toFixed(1);
+const fmt = (v, d = 2) => (v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
+const sgn = (v, d = 2) => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(d);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const range = n => Array.from({length:n}, (_, i) => i);
+const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+const T = (x, y, s, cls, extra = '') => `<text class="${cls}" x="${n1(x)}" y="${n1(y)}" ${extra}>${s}</text>`;
+function chip(x, y, w, h, tok, label, op = 1, extra = ''){
+  return `<g transform="translate(${n1(x)} ${n1(y)})" opacity="${(+op).toFixed(3)}" ${extra}><rect width="${w}" height="${h}" rx="7" style="fill:var(--${tok})"/>` +
+    (label ? `<text class="chipt" x="${w / 2}" y="${h / 2 + 5.5}" text-anchor="middle" style="fill:var(--on-${tok})">${label}</text>` : '') + `</g>`;
+}
+function arrow(x1, y1, x2, y2, color, w = 2.4, head = 9){
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy); if (L < 2) return '';
+  const ux = dx / L, uy = dy / L, h = Math.min(head, L * .6), bx = x2 - ux * h, by = y2 - uy * h;
+  return `<line x1="${n1(x1)}" y1="${n1(y1)}" x2="${n1(bx)}" y2="${n1(by)}" style="stroke:${color}; stroke-width:${w}"/>` +
+    `<polygon points="${n1(x2)},${n1(y2)} ${n1(bx - uy * h * .5)},${n1(by + ux * h * .5)} ${n1(bx + uy * h * .5)},${n1(by - ux * h * .5)}" style="fill:${color}"/>`;
+}
+/* chips that fly between cells */
+function makeMover(){ return {from:{}, to:{}, start:-1e9, dur:700, stag:0, order:{}, lift:0}; }
+function mv(m, id, now){ const b = m.to[id], a = m.from[id] || b; const k = REDUCED ? 1 : ease(clamp((now - m.start - (m.order[id] || 0) * m.stag) / m.dur));
+  return {x:lerp(a.x, b.x, k), y:lerp(a.y, b.y, k) - Math.sin(Math.PI * k) * m.lift, k}; }
+function mvBusy(m, now, n){ return !REDUCED && now - m.start < m.dur + n * m.stag + 40; }
+function mvSet(m, to, now, o = {}){
+  const cur = {}; for (const id in m.to) cur[id] = mv(m, id, now);
+  m.from = o.from || cur; m.to = to; m.start = now; m.stag = o.stag || 0; m.order = o.order || {}; m.lift = o.lift || 0; m.dur = o.dur || 700; }
+
+/* ---------- data ---------- */
+const CRD_L = [2,2,1,1,2,4,1,2,1,4,1,3,4,3,2,3,1,3,4,4,1,4,2,2,3,1,4,3,2,3,3,4];   // design.crd(..., r = 8, seed = 217)
+const DIET_TOK = ['ta', 'tc', 'td', 'tf'];
+const RAT = [[3.52,3.36,3.57,4.19,3.88,3.76,3.94],[3.47,3.73,3.38,3.87,3.69,3.51,3.35,3.64],[3.54,3.52,3.61,3.76,3.65,3.51],[3.74,3.83,3.87,4.08,4.31,3.98,3.86,3.71]];
+const RAT_M = RAT.map(mean), RAT_G = mean(RAT.flat());
+const TRT = [{n:'Water', tok:'tc'}, {n:'Spores', tok:'ta'}, {n:'Oil', tok:'tb'}];
+const TL = {W:0, S:1, O:2};
+const FERN = [[-7.5, 1.5, 7.5], [11.5, 19.5, 32.5], [9.5, 1.5, 15], [4.5, 2, 16], [3.5, 5, 11]];   // plant x (water, spores, oil)
+const PLANT_EFF = FERN.map(mean), FERN_G = mean(FERN.flat()), FERN_TM = [0, 1, 2].map(j => mean(FERN.map(r => r[j])));
+const CRD_P = ['WWS', 'OOS', 'WOS', 'SWO', 'WSO'];
+const RCBD_P = ['SWO', 'OWS', 'SWO', 'SOW', 'SWO'];    // design.rcbd(..., r = 5, seed = 217)
+const LAT = 'fbadcebfdaeccefbdadcbeafeacfbdadecfb';     // cochran.latin, row by row
+const LAT_TOK = {a:'ta', b:'tb', c:'tc', d:'td', e:'te', f:'tf'};
+const SPLIT = [[101,'a2','b1b2'],[102,'a1','b2b1'],[103,'a3','b1b2'],[104,'a3','b1b2'],[105,'a2','b1b2'],[106,'a2','b1b2'],
+  [107,'a3','b2b1'],[108,'a3','b2b1'],[109,'a1','b2b1'],[110,'a2','b1b2'],[111,'a1','b2b1'],[112,'a1','b2b1']];   // design.split(), pre-lecture
+const A_TOK = {a1:'tc', a2:'ta', a3:'td'};
+const KILN = ['Gloucester', 'Llanedeyrn', 'Caldicot', 'Islands Thorns', 'Ashley Rails'];
+const POTS = [[1,2],[1,1.65],[1,1.82],[1,1.71],[1,1.56],[1,1.83],[1,2.06],[1,1.81],[1,2.06],[1,1.62],[1,1.67],[1,1.5],[1,1.63],[1,1.62],[1,1.99],[1,1.86],[1,1.94],[1,2.33],[1,1.83],[1,2.05],[1,1.94],[1,1.92],[2,4.3],[2,3.43],[2,3.88],[2,5.64],[2,5.34],[2,3.47],[2,4.26],[2,5.91],[2,4.52],[2,7.23],[2,5.69],[2,5.51],[2,4.45],[2,3.94],[3,3.77],[3,3.94],[4,0.67],[4,0.63],[4,0.67],[4,0.68],[4,0.72],[5,0.56],[5,0.67],[5,0.53],[5,0.67],[5,0.6]];
+const KM = [1, 2, 3, 4, 5].map(k => mean(POTS.filter(p => p[0] === k).map(p => p[1])));
+const KN = [1, 2, 3, 4, 5].map(k => POTS.filter(p => p[0] === k).length);
+const MM = mean(KM);
+
+/* ---------- step 1: CRD dealing ---------- */
+const CR = {GX:120, GY:46, CW:104, CH:50, G:8};
+const crdXY = c => ({x:CR.GX + Math.floor(c / 8) * (CR.CW + CR.G), y:CR.GY + (c % 8) * (CR.CH + CR.G)});
+function cellsFromList(L, per, nT){ const cnt = Array(nT + 1).fill(0); return L.map(d => (d - 1) * per + cnt[d]++); }
+const crd = {cells:cellsFromList(CRD_L, 8, 4), m:makeMover()};
+const crdTargets = cells => { const to = {}; cells.forEach((id, c) => to[id] = crdXY(c)); return to; };
+function crdDeal(now){ const pile = {}, order = {}; crd.cells.forEach((id, c) => { pile[id] = {x:300 - CR.CW / 2, y:250 + (c % 4) * 2}; order[id] = c; });
+  mvSet(crd.m, crdTargets(crd.cells), now, {from:pile, stag:REDUCED ? 0 : 26, order, dur:REDUCED ? 1 : 480}); }
+function crdShuffle(reset){ const now = performance.now(); crd.cells = reset ? cellsFromList(CRD_L, 8, 4) : shuffle(range(32));
+  const order = {}; shuffle(range(32)).forEach((id, i) => order[id] = i);
+  mvSet(crd.m, crdTargets(crd.cells), now, {stag:REDUCED ? 0 : 12, order, lift:22, dur:REDUCED ? 1 : 700}); requestRender(); }
+function drawCRD(t, now){ let s = '';
+  for (let c = 0; c < 32; c++){ const p = crdXY(c); s += `<rect class="slot" x="${p.x}" y="${p.y}" width="${CR.CW}" height="${CR.CH}" rx="7"/>`; }
+  for (let k = 0; k < 4; k++) s += T(CR.GX + k * (CR.CW + CR.G) + CR.CW / 2, 34, 'Col ' + (k + 1), 'tick', 'text-anchor="middle"');
+  for (let r = 0; r < 8; r++) s += T(CR.GX - 12, CR.GY + r * (CR.CH + CR.G) + CR.CH / 2 + 5, 'Row ' + (r + 1), 'tick', 'text-anchor="end"');
+  const ids = range(32).map(id => ({id, p:mv(crd.m, id, now)})).sort((a, b) => (a.p.k < 1) - (b.p.k < 1));
+  ids.forEach(({id, p}) => { const d = Math.floor(id / 8); s += chip(p.x, p.y, CR.CW, CR.CH, DIET_TOK[d], 'Diet ' + (d + 1)); });
+  return s; }
+
+/* ---------- step 2: CRD model on the rat data ---------- */
+const RC = {L:96, R:570, T:30, B:470, lo:3.3, hi:4.4};
+const rY = v => RC.B - (v - RC.lo) / (RC.hi - RC.lo) * (RC.B - RC.T);
+const rX = i => RC.L + (i + .5) * (RC.R - RC.L) / 4;
+function drawRat(t){ let s = '';
+  [3.4, 3.6, 3.8, 4.0, 4.2, 4.4].forEach(v => { s += `<line class="grid" x1="${RC.L}" y1="${n1(rY(v))}" x2="${RC.R}" y2="${n1(rY(v))}"/>` + T(RC.L - 10, rY(v) + 5, v.toFixed(1), 'tick', 'text-anchor="end"'); });
+  s += `<rect class="frame" x="${RC.L}" y="${RC.T}" width="${RC.R - RC.L}" height="${RC.B - RC.T}"/>`;
+  s += T(24, (RC.T + RC.B) / 2, 'Liver weight', 'lab', `transform="rotate(-90 24 ${(RC.T + RC.B) / 2})" text-anchor="middle"`);
+  RAT.forEach((g, i) => { s += T(rX(i), RC.B + 24, 'Diet ' + (i + 1), 'lab', 'text-anchor="middle"') + T(rX(i), RC.B + 44, 'n = ' + g.length, 'labm', 'text-anchor="middle"'); });
+  const kp = seg(t, 0, .1), kmu = seg(t, .14, .3), ka = seg(t, .36, .56), ke = seg(t, .62, .84);
+  if (ke > 0) RAT.forEach((g, i) => g.forEach((v, j) => { const x = rX(i) + (j - (g.length - 1) / 2) * 8 - 14; const y0 = rY(RAT_M[i]), y1 = rY(v);
+    s += `<line x1="${n1(x)}" y1="${n1(y0)}" x2="${n1(x)}" y2="${n1(lerp(y0, y1, ke))}" style="stroke:var(--td); stroke-width:1.6; opacity:.75"/>`; }));
+  if (kmu > 0){ const y = rY(RAT_G); s += `<line x1="${RC.L}" y1="${n1(y)}" x2="${n1(lerp(RC.L, RC.R, kmu))}" y2="${n1(y)}" style="stroke:var(--acc2); stroke-width:2; stroke-dasharray:7 5"/>`;
+    if (kmu > .9) s += T(RC.R - 6, y - 8, 'μ = ' + RAT_G.toFixed(2), 'lab halo', 'text-anchor="end" style="fill:var(--acc2)"'); }
+  if (ka > 0) RAT.forEach((g, i) => { const x = rX(i), ym = rY(RAT_M[i]), yg = rY(RAT_G);
+    s += `<line x1="${n1(x - 44)}" y1="${n1(ym)}" x2="${n1(x + 24)}" y2="${n1(ym)}" style="stroke:var(--ink); stroke-width:3" opacity="${ka.toFixed(2)}"/>`;
+    s += arrow(x + 36, yg, x + 36, lerp(yg, ym, ka), 'var(--acc)', 2.4, 8);
+    if (ka > .9) s += T(x + 44, (yg + ym) / 2 + 5 + (Math.abs(ym - yg) < 18 ? (ym < yg ? -14 : 14) : 0), 'α' + '₁₂₃₄'[i] + ' ' + sgn(RAT_M[i] - RAT_G), 'labm halo', 'style="fill:var(--acc)"'); });
+  RAT.forEach((g, i) => g.forEach((v, j) => { const x = rX(i) + (j - (g.length - 1) / 2) * 8 - 14;
+    s += `<circle cx="${n1(x)}" cy="${n1(rY(v))}" r="5.5" style="fill:var(--${DIET_TOK[i]}); stroke:var(--surface); stroke-width:1.2" opacity="${kp.toFixed(2)}"/>`; }));
+  return s; }
+
+/* ---------- steps 3 and 4: plants as blocks ---------- */
+const PL = {X0:222, CW:94, G:10, Y0:52, CH:78, GY:16};
+const plXY = c => ({x:PL.X0 + (c % 3) * (PL.CW + PL.G), y:PL.Y0 + Math.floor(c / 3) * (PL.CH + PL.GY)});
+function rowsToCells(rows){ const cnt = [0, 0, 0]; const out = []; rows.forEach(r => [...r].forEach(ch => { const k = TL[ch]; out.push(k * 5 + cnt[k]++); })); return out; }
+const plants = {cells:rowsToCells(CRD_P), m:makeMover(), mode:'crd'};
+const plTargets = cells => { const to = {}; cells.forEach((id, c) => to[id] = plXY(c)); return to; };
+function luck(cells){ const sum = [0, 0, 0], n = [0, 0, 0]; cells.forEach((id, c) => { const k = Math.floor(id / 5); sum[k] += PLANT_EFF[Math.floor(c / 3)]; n[k]++; }); return sum.map((v, k) => v / n[k]); }
+function plSet(rows, now){ plants.cells = rowsToCells(rows); const first = !Object.keys(plants.m.to).length; const to = plTargets(plants.cells), order = {};
+  plants.cells.forEach((id, c) => order[id] = c);
+  const from = first ? Object.fromEntries(Object.entries(to).map(([id, p]) => [id, {x:p.x, y:p.y - 40}])) : null;
+  mvSet(plants.m, to, now, {from, stag:REDUCED ? 0 : 30, order, lift:14, dur:REDUCED ? 1 : 650}); }
+function plShuffle(){ const now = performance.now();
+  if (plants.mode === 'crd') plants.cells = shuffle(range(15));
+  else { const out = plants.cells.slice(); for (let r = 0; r < 5; r++){ const ids = shuffle(out.slice(r * 3, r * 3 + 3)); for (let j = 0; j < 3; j++) out[r * 3 + j] = ids[j]; } plants.cells = out; }
+  const order = {}; shuffle(range(15)).forEach((id, i) => order[id] = i);
+  mvSet(plants.m, plTargets(plants.cells), now, {stag:REDUCED ? 0 : 20, order, lift:20, dur:REDUCED ? 1 : 700}); requestRender(); }
+function drawPlants(t, now){ let s = ''; const mx = Math.max(...PLANT_EFF);
+  for (let k = 0; k < 3; k++) s += T(PL.X0 + k * (PL.CW + PL.G) + PL.CW / 2, 38, 'Leaf pair ' + (k + 1), 'tick', 'text-anchor="middle"');
+  for (let r = 0; r < 5; r++){ const y = PL.Y0 + r * (PL.CH + PL.GY), e = PLANT_EFF[r];
+    s += `<rect x="${PL.X0 - 8}" y="${y - 6}" width="${3 * PL.CW + 2 * PL.G + 16}" height="${PL.CH + 12}" rx="10" style="fill:var(--acc2); opacity:${(.05 + .3 * e / mx).toFixed(3)}"/>`;
+    s += T(22, y + 28, 'Plant ' + (r + 1), 'lab');
+    s += `<rect x="22" y="${y + 40}" width="${n1(Math.max(2, e / 22 * 140))}" height="9" rx="2" style="fill:var(--acc2)"/>` + T(28 + e / 22 * 140, y + 49, e.toFixed(1), 'labm');
+    for (let k = 0; k < 3; k++){ const p = plXY(r * 3 + k); s += `<rect class="slot" x="${p.x}" y="${p.y}" width="${PL.CW}" height="${PL.CH}" rx="7"/>`; } }
+  const ids = range(15).map(id => ({id, p:mv(plants.m, id, now)})).sort((a, b) => (a.p.k < 1) - (b.p.k < 1));
+  ids.forEach(({id, p}) => { const k = Math.floor(id / 5); s += chip(p.x, p.y, PL.CW, PL.CH, TRT[k].tok, TRT[k].n); });
+  if (!mvBusy(plants.m, now, 15)) for (let r = 0; r < 5; r++){ const have = new Set(plants.cells.slice(r * 3, r * 3 + 3).map(id => Math.floor(id / 5)));
+    const miss = [0, 1, 2].filter(k => !have.has(k)).map(k => TRT[k].n); const y = PL.Y0 + r * (PL.CH + PL.GY);
+    miss.forEach((m, j) => { s += T(534, y + 32 + j * 18, 'no ' + m, 'labm', 'style="fill:var(--td)"'); }); }
+  s += T(22, 534, 'Bar and shading: average drop in mealybugs on that plant (real data)', 'labm');
+  return s; }
+function luckWidget(){ return `<div class="panel mini"><h3>Average plant effect under each treatment</h3><svg id="luck" viewBox="0 0 360 118" role="img" aria-label="Average plant effect under each treatment"></svg>
+  <p class="cap" id="luckcap"></p></div>`; }
+function luckTick(){ const svg = $('luck'); if (!svg) return; const L = luck(plants.cells); let s = ''; const x0 = 70, w = 250, ref = x0 + FERN_G / 22 * w;
+  L.forEach((v, k) => { const y = 10 + k * 32; s += `<text x="0" y="${y + 15}" style="fill:var(--ink); font:600 13px var(--body)">${TRT[k].n}</text>` +
+    `<rect x="${x0}" y="${y + 2}" width="${n1(v / 22 * w)}" height="18" rx="3" style="fill:var(--${TRT[k].tok})"/>` +
+    `<text x="${n1(x0 + v / 22 * w + 6)}" y="${y + 16}" style="fill:var(--ink); font:12.5px var(--mono)">${v.toFixed(2)}</text>`; });
+  s += `<line x1="${n1(ref)}" y1="4" x2="${n1(ref)}" y2="104" style="stroke:var(--ink); stroke-dasharray:3 3; opacity:.6"/><text x="${n1(ref)}" y="116" text-anchor="middle" style="fill:var(--muted); font:11.5px var(--mono)">all plants ${FERN_G.toFixed(2)}</text>`;
+  svg.innerHTML = s; const spread = Math.max(...L) - Math.min(...L);
+  $('luckcap').textContent = spread < .01 ? 'Every treatment is on the same five plants, so the plant effect is the same for all three.'
+    : `The highest and lowest treatments differ by ${spread.toFixed(1)} points of plant effect. This difference comes from the layout alone.`; }
+
+/* ---------- step 5: fern data ---------- */
+const FC = {L:90, R:500, T:30, B:470, lo:-10, hi:35};
+const fY = v => FC.B - (v - FC.lo) / (FC.hi - FC.lo) * (FC.B - FC.T);
+const fX = j => FC.L + (j + .5) * (FC.R - FC.L) / 3;
+const fern = {manual:false, from:0, to:0, start:0};
+const fernK = (t, now) => fern.manual ? lerp(fern.from, fern.to, REDUCED ? 1 : ease(clamp((now - fern.start) / 1000))) : seg(t, .38, .72);
+function drawFern(t, now){ let s = ''; const k = fernK(t, now), kp = seg(t, 0, .12);
+  [-10, 0, 10, 20, 30].forEach(v => { s += `<line class="grid" x1="${FC.L}" y1="${n1(fY(v))}" x2="${FC.R}" y2="${n1(fY(v))}"/>` + T(FC.L - 10, fY(v) + 5, fmt(v, 0), 'tick', 'text-anchor="end"'); });
+  s += `<line x1="${FC.L}" y1="${n1(fY(0))}" x2="${FC.R}" y2="${n1(fY(0))}" style="stroke:var(--muted); stroke-dasharray:4 4"/>`;
+  s += `<rect class="frame" x="${FC.L}" y="${FC.T}" width="${FC.R - FC.L}" height="${FC.B - FC.T}"/>`;
+  s += T(24, (FC.T + FC.B) / 2, 'Drop in mealybugs per leaf', 'lab', `transform="rotate(-90 24 ${(FC.T + FC.B) / 2})" text-anchor="middle"`);
+  TRT.forEach((tr, j) => { s += T(fX(j), FC.B + 26, tr.n, 'lab', 'text-anchor="middle"'); });
+  const pos = FERN.map((row, p) => row.map((v, j) => ({x:fX(j) + (p - 2) * 11, y:fY(lerp(v, v - PLANT_EFF[p] + FERN_G, k))})));
+  pos.forEach((pts, p) => { s += `<polyline points="${pts.map(q => n1(q.x) + ',' + n1(q.y)).join(' ')}" style="fill:none; stroke:var(--muted); stroke-width:1.5" opacity="${(kp * .7).toFixed(2)}"/>`;
+    s += T(pts[2].x + 16, pts[2].y + 5, 'Plant ' + (p + 1), 'labm', `opacity="${(kp * (1 - k)).toFixed(2)}"`); });
+  FERN_TM.forEach((m, j) => { s += `<line x1="${n1(fX(j) - 48)}" y1="${n1(fY(m))}" x2="${n1(fX(j) + 48)}" y2="${n1(fY(m))}" style="stroke:var(--ink); stroke-width:3"/>` +
+    T(fX(j) - 54, fY(m) + 5, m.toFixed(1), 'labm halo', 'text-anchor="end" style="fill:var(--ink)"'); });
+  pos.forEach(pts => pts.forEach((q, j) => { s += `<circle cx="${n1(q.x)}" cy="${n1(q.y)}" r="6.5" style="fill:var(--${TRT[j].tok}); stroke:var(--surface); stroke-width:1.4" opacity="${kp.toFixed(2)}"/>`; }));
+  s += T(FC.L, 534, k > .5 ? 'Each plant\'s average removed. The treatment averages (black bars) did not move.' : 'Raw data. Each line joins one plant\'s three leaf pairs.', 'labm');
+  return s; }
+function fernTick(t, now){ const k = fernK(t, now); const a = $('card-crd'), b = $('card-rcbd'); if (!a) return; a.classList.toggle('on', k < .5); b.classList.toggle('on', k >= .5);
+  const btn = $('fernbtn'); if (btn) btn.textContent = k >= .5 ? 'Show the raw data' : 'Remove the plant effect'; }
+
+/* ---------- step 6: Latin square ---------- */
+const LS = {X0:112, CS:70, G:5, Y0:52};
+const lat = {rp:range(6), cp:range(6), sym:{a:'a', b:'b', c:'c', d:'d', e:'e', f:'f'}, fr:range(6), fc:range(6), fsym:null, start:-1e9, sel:null};
+function latShuffle(reset){ const now = performance.now(); lat.fr = lat.rp.slice(); lat.fc = lat.cp.slice(); lat.fsym = {...lat.sym};
+  if (reset){ lat.rp = range(6); lat.cp = range(6); lat.sym = {a:'a', b:'b', c:'c', d:'d', e:'e', f:'f'}; }
+  else { lat.rp = shuffle(range(6)); lat.cp = shuffle(range(6)); const L = shuffle([...'abcdef']); lat.sym = Object.fromEntries([...'abcdef'].map((x, i) => [x, L[i]])); }
+  lat.sel = null; lat.start = now; requestRender(); }
+const latBusy = now => !REDUCED && now - lat.start < 1300;
+function drawLatin(t, now){ let s = ''; const k = REDUCED ? 1 : clamp((now - lat.start) / 1200), kr = ease(clamp(k / .5)), kc = ease(clamp((k - .5) / .5));
+  const sym = k >= .5 || !lat.fsym ? lat.sym : lat.fsym; const step = LS.CS + LS.G;
+  for (let c = 0; c < 6; c++) s += T(LS.X0 + c * step + LS.CS / 2, 40, 'Col ' + (c + 1), 'tick', 'text-anchor="middle"');
+  for (let r = 0; r < 6; r++) s += T(LS.X0 - 12, LS.Y0 + r * step + LS.CS / 2 + 5, 'Row ' + (r + 1), 'tick', 'text-anchor="end"');
+  let band = '';
+  if (lat.sel){ const {r, c} = lat.sel; band = `<rect x="${LS.X0 - 6}" y="${LS.Y0 + r * step - 4}" width="${6 * step + 7}" height="${LS.CS + 8}" rx="9" style="fill:none; stroke:var(--acc); stroke-width:3"/>` +
+    `<rect x="${LS.X0 + c * step - 4}" y="${LS.Y0 - 6}" width="${LS.CS + 8}" height="${6 * step + 7}" rx="9" style="fill:none; stroke:var(--acc2); stroke-width:3"/>`; }
+  else if (t > .45 && t < 1){ const sw = (t - .45) / .55; const isRow = sw < .5, i = Math.min(5, Math.floor((isRow ? sw : sw - .5) / .5 * 6));
+    band = isRow ? `<rect x="${LS.X0 - 6}" y="${LS.Y0 + i * step - 4}" width="${6 * step + 7}" height="${LS.CS + 8}" rx="9" style="fill:none; stroke:var(--acc); stroke-width:3"/>`
+      : `<rect x="${LS.X0 + i * step - 4}" y="${LS.Y0 - 6}" width="${LS.CS + 8}" height="${6 * step + 7}" rx="9" style="fill:none; stroke:var(--acc2); stroke-width:3"/>`; }
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++){ const L0 = LAT[r * 6 + c], L = sym[L0];
+    const ri = lerp(lat.fr[r], lat.rp[r], kr), ci = lerp(lat.fc[c], lat.cp[c], kc);
+    const pop = seg(t, r * .06, r * .06 + .14), x = LS.X0 + ci * step, y = LS.Y0 + ri * step;
+    s += `<g class="cell" data-r="${r}" data-c="${c}">` + chip(x, y + (1 - pop) * -16, LS.CS, LS.CS, LAT_TOK[L], L, pop) + `</g>`; }
+  s += band;
+  let cap = 'Tap a cell to check its row and column.';
+  if (lat.sel) cap = `Row ${lat.sel.r + 1} and column ${lat.sel.c + 1} each hold a, b, c, d, e and f exactly once.`;
+  else if (t > .45 && t < 1) cap = 'Checking: every row and every column holds a to f once.';
+  s += T(LS.X0, 540, cap, 'labm');
+  return s; }
+
+/* ---------- step 7: split plot ---------- */
+const SP = {X0:56, W:120, GX:12, Y0:30, H:142, GY:22};
+const spXY = i => ({x:SP.X0 + (i % 4) * (SP.W + SP.GX), y:SP.Y0 + Math.floor(i / 4) * (SP.H + SP.GY)});
+function drawSplit(t){ let s = `<defs><pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" style="fill:none"/><line x1="0" y1="0" x2="0" y2="9" style="stroke:var(--ink); stroke-width:2.4; opacity:.38"/></pattern></defs>`;
+  const kA = seg(t, .02, .12), kC = seg(t, .46, .6);
+  SPLIT.forEach(([id, a, bs], i) => { const p = spXY(i), kB = seg(t, .14 + i * .022, .14 + i * .022 + .1), kD = seg(t, .62 + i * .02, .62 + i * .02 + .1);
+    s += `<rect x="${p.x}" y="${p.y}" width="${SP.W}" height="${SP.H}" rx="8" style="fill:var(--surface); stroke:var(--rule); stroke-width:1.5" opacity="${kA.toFixed(2)}"/>`;
+    if (kB > 0) s += `<rect x="${p.x}" y="${p.y}" width="${SP.W}" height="${SP.H}" rx="8" style="fill:var(--${A_TOK[a]})" opacity="${(kB * .92).toFixed(2)}"/>` +
+      T(p.x + SP.W / 2, p.y + 66, a, 'big', `text-anchor="middle" opacity="${kB.toFixed(2)}" style="fill:var(--on-${A_TOK[a]})"`);
+    if (kD > 0){ const b2 = bs.slice(0, 2) === 'b2' ? 0 : 1; const hx = p.x + b2 * SP.W / 2;
+      s += `<rect x="${hx}" y="${p.y}" width="${SP.W / 2}" height="${SP.H}" style="fill:url(#hatch)" opacity="${kD.toFixed(2)}"/>`;
+      [bs.slice(0, 2), bs.slice(2)].forEach((b, h) => { s += T(p.x + SP.W / 4 + h * SP.W / 2, p.y + SP.H - 14, b, 'chipt halo', `text-anchor="middle" opacity="${kD.toFixed(2)}" style="fill:var(--ink)"`); }); }
+    if (kC > 0) s += `<line x1="${p.x + SP.W / 2}" y1="${p.y}" x2="${p.x + SP.W / 2}" y2="${n1(p.y + SP.H * kC)}" style="stroke:var(--ink); stroke-width:2.4"/>`;
+    s += `<rect x="${p.x}" y="${p.y}" width="${SP.W}" height="${SP.H}" rx="8" style="fill:none; stroke:var(--ink); stroke-width:2" opacity="${(kA * .8).toFixed(2)}"/>`;
+    s += T(p.x + 8, p.y + 20, id, 'labm halo', `opacity="${kA.toFixed(2)}" style="fill:var(--ink)"`); });
+  return s; }
+function splitTick(t){ const ph = t < .14 ? 0 : t < .46 ? 1 : t < .62 ? 2 : 3;
+  document.querySelectorAll('#chips li').forEach((li, i) => li.classList.toggle('on', i === ph));
+  const on = {mu:t > .02, a:ph >= 1, g:ph >= 1, b:ph >= 3, ab:ph >= 3, e:ph >= 3};
+  ['mu', 'a', 'g', 'b', 'ab', 'e'].forEach(k => { const el = $('sp-' + k); if (el){ el.classList.toggle('on', on[k] && ['a', 'g'].includes(k)); el.classList.toggle('on2', on[k] && ['b', 'ab', 'e'].includes(k)); } }); }
+
+/* ---------- step 8: Hasse diagram ---------- */
+const HN = [{n:'Intercept', x:300, y:56, lv:1, df:1, st:0}, {n:'Whole Plot', x:165, y:178, lv:3, df:2, st:1}, {n:'Subplot', x:435, y:178, lv:2, df:1, st:2},
+  {n:'(Experimental Units)', x:150, y:308, lv:12, df:9, st:1, rnd:true}, {n:'Whole Plot : Subplot', x:430, y:308, lv:6, df:2, st:2}, {n:'(Experimental Unit : Subplot)', x:300, y:440, lv:24, df:9, st:2, rnd:true}];
+const HE = [[0, 1, 'intercept is above whole plot'], [0, 2, 'intercept is above subplot'], [1, 3, 'whole plot is above the experimental units'], [1, 4, 'whole plot is above whole plot : subplot'],
+  [2, 4, 'subplot is above whole plot : subplot'], [3, 5, 'experimental unit is above experimental unit : subplot'], [4, 5, 'whole plot : subplot is above experimental unit : subplot']];
+const hW = n => n.length * 8.3 + 28;
+const hStart = e => .08 + e * .095;
+function drawHasse(t){ let s = ''; const kS = seg(t, .9, 1), kD = seg(t, .8, .9);
+  const seen = new Set([0]); const nodeK = [seg(t, .02, .07), 0, 0, 0, 0, 0];
+  HE.forEach(([a, b], e) => { const k = seg(t, hStart(e), hStart(e) + .08); if (k > 0){ const A = HN[a], B = HN[b], y1 = A.y + 20, y2 = B.y - 20;
+    s += `<line x1="${A.x}" y1="${y1}" x2="${n1(lerp(A.x, B.x, k))}" y2="${n1(lerp(y1, y2, k))}" style="stroke:var(--ink); stroke-width:2"/>`; }
+    if (k >= 1 && !seen.has(b)){ seen.add(b); } nodeK[b] = Math.max(nodeK[b], seg(t, hStart(e) + .07, hStart(e) + .11)); });
+  HN.forEach((N, i) => { const k = nodeK[i]; if (k <= 0) return; const w = hW(N.n), col = kS > 0 && N.st ? (N.st === 1 ? 'var(--acc)' : 'var(--acc2)') : 'var(--ink)';
+    s += `<g opacity="${k.toFixed(2)}"><rect x="${n1(N.x - w / 2)}" y="${N.y - 20}" width="${n1(w)}" height="40" rx="8" style="fill:var(--surface); stroke:${col}; stroke-width:${N.rnd ? 2 : 2.4}; ${N.rnd ? 'stroke-dasharray:6 4' : ''}"/>` +
+      T(N.x, N.y + 5.5, N.n, 'lab', `text-anchor="middle" style="fill:${col}"`) + `</g>`;
+    if (kD > 0) s += T(N.x, N.y + 38, `${N.lv} level${N.lv > 1 ? 's' : ''} · ${N.df} df`, 'labm', `text-anchor="middle" opacity="${kD.toFixed(2)}"`); });
+  if (kS > 0) s += `<g opacity="${kS.toFixed(2)}"><rect x="40" y="506" width="14" height="14" rx="3" style="fill:none; stroke:var(--acc); stroke-width:2.4"/>` + T(60, 518, 'whole-plot level', 'labm', 'style="fill:var(--acc)"') +
+    `<rect x="230" y="506" width="14" height="14" rx="3" style="fill:none; stroke:var(--acc2); stroke-width:2.4"/>` + T(250, 518, 'subplot level', 'labm', 'style="fill:var(--acc2)"') +
+    `<rect x="390" y="506" width="14" height="14" rx="3" style="fill:none; stroke:var(--ink); stroke-width:2; stroke-dasharray:4 3"/>` + T(410, 518, 'random term', 'labm') + `</g>`;
+  return s; }
+function hasseTick(t){ let done = 0; HE.forEach((e, i) => { if (t >= hStart(i)) done = i + 1; });
+  HE.forEach(([a, b], i) => { const td = $(`mx-${a}-${b}`); if (td){ const on = i < done; td.className = on ? 't' : 'f'; td.textContent = on ? 'T' : 'F'; } });
+  const line = $('hcode'); if (!line) return;
+  line.textContent = done === 0 ? 'split.matrix <- matrix(data = FALSE, ncol = 6, nrow = 6)'
+    : t > .8 ? 'print(hasse(split.matrix, c(), list(cluster = F)))'
+    : `split.matrix[${HE[done - 1][0] + 1},${HE[done - 1][1] + 1}] = TRUE   # ${HE[done - 1][2]}`; }
+
+/* ---------- step 9: contrast coding ---------- */
+const CC = {L:80, R:575, T:24, B:440, hi:7.5};
+const cY = v => CC.B - v / CC.hi * (CC.B - CC.T);
+const cX = i => CC.L + (i + .5) * (CC.R - CC.L) / 5;
+const D = [[0,0,0,0],[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
+const CODES = {
+  dummy:{tab:'Dummy (default)', r:'contrasts(RBPottery$Kiln) <- contr.treatment(5)', M:D, icpt:[KM[0], 'Gloucester average'],
+    co:[1, 2, 3, 4].map(k => ({to:k, from:[0], txt:`${KILN[k]} − Gloucester`})),
+    note:'Each coefficient is a kiln minus the first level, Gloucester. The intercept is Gloucester\'s own average. The pre-lecture\'s custom coding uses base = 5 to make Ashley Rails the reference instead.'},
+  custom:{tab:'Pre-lecture custom', r:'contrasts(RBPottery$Kiln) <- contr.treatment(5, base = 5) - 1/5', M:[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[0,0,0,0]].map(r => r.map(v => v - .2)), icpt:[MM, 'mean of the 5 kiln averages'],
+    co:[0, 1, 2, 3].map(k => ({to:k, from:[4], txt:`${KILN[k]} − Ashley Rails`})),
+    note:'Each kiln is compared with Ashley Rails, which base = 5 sets as the reference. Subtracting 1/5 moves the intercept to the mean of the five kiln averages.'},
+  sum:{tab:'Sum', r:'contrasts(RBPottery$Kiln) <- contr.sum(5)', M:[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[-1,-1,-1,-1]], icpt:[MM, 'mean of the 5 kiln averages'],
+    co:[0, 1, 2, 3].map(k => ({to:k, from:'all', txt:`${KILN[k]} − mean of all`})),
+    note:`Each coefficient is one kiln minus the mean of all five. Ashley Rails gets no coefficient. Its gap is minus the sum of the other four (${fmt(KM[4] - MM)}).`},
+  helmert:{tab:'Helmert', r:'contrasts(RBPottery$Kiln) <- helmert.matrix', M:[[4/5,0,0,0],[-1/5,3/4,0,0],[-1/5,-1/4,2/3,0],[-1/5,-1/4,-1/3,1/2],[-1/5,-1/4,-1/3,-1/2]], icpt:[MM, 'mean of the 5 kiln averages'],
+    co:[0, 1, 2, 3].map(k => ({to:k, from:range(5).slice(k + 1), txt:`${KILN[k]} − mean of the ${4 - k > 1 ? (4 - k) + ' after it' : 'one after it'}`})),
+    note:'Each kiln is compared with the mean of every kiln after it. Typed by hand, the matrix needs all 20 numbers, zeros included. With fewer, matrix() recycles values and R prints a warning.'},
+  reverse:{tab:'Reverse Helmert', r:'contrasts(RBPottery$Kiln) <- contr.helmert(5)', M:[[-1,-1,-1,-1],[1,-1,-1,-1],[0,2,-1,-1],[0,0,3,-1],[0,0,0,4]], icpt:[MM, 'mean of the 5 kiln averages'],
+    co:[1, 2, 3, 4].map(k => ({to:k, from:range(k), div:k + 1, txt:`(${KILN[k]} − mean of the ${k > 1 ? k + ' before it' : 'one before it'}) ÷ ${k + 1}`})),
+    note:'R\'s contr.helmert() is this reverse version. Each kiln is compared with the mean of the kilns before it, and the coefficient is that gap divided by 2, 3, 4 or 5.'}
+};
+const refVal = c => c.from === 'all' ? MM : mean(c.from.map(i => KM[i]));
+const coefVal = c => (KM[c.to] - refVal(c)) / (c.div || 1);
+const ct = {code:'dummy', start:-1e9, auto:true, focus:0};
+const ctFocus = now => ct.auto ? clamp(Math.floor((now - ct.start - 1100) / 1700), 0, 3) : ct.focus;
+const ctBusy = now => !REDUCED && ct.auto && now - ct.start < 1100 + 1700 * 3 + 200;
+function frac(v){ if (Math.abs(v) < 1e-9) return '0'; for (let d = 1; d <= 6; d++){ const n = v * d; if (Math.abs(n - Math.round(n)) < 1e-6) return (v < 0 ? '−' : '') + (d === 1 ? Math.abs(Math.round(n)) : Math.abs(Math.round(n)) + '/' + d); } return fmt(v); }
+function drawContrast(t, now){ let s = ''; const C = CODES[ct.code], f = REDUCED ? ct.focus : ctFocus(now);
+  for (let v = 0; v <= 7; v++) s += `<line class="grid" x1="${CC.L}" y1="${n1(cY(v))}" x2="${CC.R}" y2="${n1(cY(v))}"/>` + T(CC.L - 10, cY(v) + 5, v, 'tick', 'text-anchor="end"');
+  s += `<rect class="frame" x="${CC.L}" y="${CC.T}" width="${CC.R - CC.L}" height="${CC.B - CC.T}"/>`;
+  s += T(22, (CC.T + CC.B) / 2, 'MgO (% of the pot)', 'lab', `transform="rotate(-90 22 ${(CC.T + CC.B) / 2})" text-anchor="middle"`);
+  KILN.forEach((k, i) => { const w = k.split(' '); w.forEach((p, j) => s += T(cX(i), CC.B + 22 + j * 17, p, 'lab', 'text-anchor="middle"'));
+    s += T(cX(i), CC.B + 22 + w.length * 17 + 2, 'n = ' + KN[i], 'labm', 'text-anchor="middle"'); });
+  const cnt = [0, 0, 0, 0, 0];
+  POTS.forEach(([k, v]) => { const j = cnt[k - 1]++; s += `<circle cx="${n1(cX(k - 1) - 34 + (j % 6) * 4)}" cy="${n1(cY(v))}" r="3" style="fill:var(--muted)" opacity=".45"/>`; });
+  const ki = seg((now - ct.start) / 700, 0, 1);
+  s += `<line x1="${CC.L}" y1="${n1(cY(C.icpt[0]))}" x2="${n1(lerp(CC.L, CC.R, ki))}" y2="${n1(cY(C.icpt[0]))}" style="stroke:var(--acc2); stroke-width:2.2"/>`;
+  if (ki > .95) s += T(CC.R - 6, cY(C.icpt[0]) - 8, `intercept ${C.icpt[0].toFixed(2)} (${C.icpt[1]})`, 'labm halo', 'text-anchor="end" style="fill:var(--acc2)"');
+  const fc = C.co[f]; if (fc){ const rv = refVal(fc), xs = fc.from === 'all' ? [0, 4] : fc.from.concat([fc.to]); const x1 = cX(Math.min(...xs)) - 40, x2 = cX(Math.max(...xs)) + 40;
+    s += `<line x1="${n1(x1)}" y1="${n1(cY(rv))}" x2="${n1(x2)}" y2="${n1(cY(rv))}" style="stroke:var(--acc); stroke-width:2; stroke-dasharray:6 4"/>`;
+    if (fc.from !== 'all') fc.from.forEach(i => { s += `<circle cx="${n1(cX(i))}" cy="${n1(cY(KM[i]))}" r="13" style="fill:none; stroke:var(--acc); stroke-width:2; stroke-dasharray:3 3"/>`; }); }
+  C.co.forEach((c, i) => { const k = REDUCED ? 1 : ease(clamp((now - ct.start - 300 - i * 220) / 450)); if (k <= 0) return; const x = cX(c.to) + 24, y0 = cY(refVal(c)), y1 = cY(KM[c.to]), on = i === f;
+    s += `<g opacity="${on ? 1 : .35}">` + arrow(x, y0, x, lerp(y0, y1, k), on ? 'var(--acc)' : 'var(--muted)', on ? 3 : 2, 9) + `</g>`;
+    if (k > .95) s += T(x + 8, (y0 + y1) / 2 + 5, `b${i + 1} = ${fmt(coefVal(c))}`, on ? 'lab halo' : 'labm halo', `style="fill:${on ? 'var(--acc)' : 'var(--muted)'}"`); });
+  KM.forEach((m, i) => { s += `<circle cx="${n1(cX(i))}" cy="${n1(cY(m))}" r="7.5" style="fill:var(--ink); stroke:var(--surface); stroke-width:2"/>` + T(cX(i) - 14, cY(m) - 10, m.toFixed(2), 'labm halo', 'text-anchor="end" style="fill:var(--ink)"'); });
+  return s; }
+function contrastWidget(){ const C = CODES[ct.code];
+  return `<div class="tabs" role="group" aria-label="Coding">${Object.entries(CODES).map(([k, c]) => `<button type="button" data-code="${k}" aria-pressed="${k === ct.code}">${c.tab}</button>`).join('')}</div>
+  <div class="panel"><h3>Contrast matrix</h3><div class="tablewrap"><table class="mx"><thead><tr><th>Kiln</th><th>b1</th><th>b2</th><th>b3</th><th>b4</th></tr></thead><tbody>
+    ${KILN.map((k, i) => `<tr><td>${k}</td>${C.M[i].map(v => `<td class="${Math.abs(v) > 1e-9 ? 't' : 'f'}">${frac(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <pre class="code">${C.r}</pre></div>
+  <div class="panel"><h3>What each coefficient measures</h3><div class="tablewrap"><table><thead><tr><th>Term</th><th>Compares</th><th>Value</th></tr></thead><tbody>
+    <tr><td>Intercept</td><td style="text-align:left">${C.icpt[1]}</td><td class="num">${C.icpt[0].toFixed(2)}</td></tr>
+    ${C.co.map((c, i) => `<tr class="pick" data-f="${i}" id="co-${i}"><td>b${i + 1}</td><td style="text-align:left">${c.txt}</td><td class="num">${fmt(coefVal(c))}</td></tr>`).join('')}</tbody></table></div>
+    <p class="cap">${C.note} Tap a row to show it on the chart. Values match <code>coef(lm(MgO ~ Kiln))</code>.</p></div>`; }
+function contrastBind(){ document.querySelectorAll('[data-code]').forEach(b => b.addEventListener('click', () => { ct.code = b.dataset.code; ct.start = performance.now(); ct.auto = true; ct.focus = 0; $('widget').innerHTML = contrastWidget(); contrastBind(); requestRender(); }));
+  document.querySelectorAll('tr[data-f]').forEach(r => r.addEventListener('click', () => { ct.auto = false; ct.focus = +r.dataset.f; requestRender(); })); }
+function contrastTick(now){ const f = REDUCED ? ct.focus : ctFocus(now); document.querySelectorAll('tr[data-f]').forEach(r => r.classList.toggle('focus', +r.dataset.f === f)); }
+
+/* ---------- step 10: planned contrasts on the fern data ---------- */
+const PC = {L:90, R:520, T:24, B:396, lo:-5, hi:25};
+const pY = v => PC.B - (v - PC.lo) / (PC.hi - PC.lo) * (PC.B - PC.T);
+const pX = j => PC.L + (j + .5) * (PC.R - PC.L) / 3;
+const ACTIVE = (FERN_TM[1] + FERN_TM[2]) / 2, SS1 = 156.41, SS2 = 275.63, SST = 432.03;
+function drawPlanned(t){ let s = ''; const kp = seg(t, 0, .12), k1 = seg(t, .2, .45), k2 = seg(t, .55, .8), kb1 = seg(t, .84, .92), kb2 = seg(t, .92, 1);
+  [-5, 0, 5, 10, 15, 20, 25].forEach(v => { s += `<line class="grid" x1="${PC.L}" y1="${n1(pY(v))}" x2="${PC.R}" y2="${n1(pY(v))}"/>` + T(PC.L - 10, pY(v) + 5, fmt(v, 0), 'tick', 'text-anchor="end"'); });
+  s += `<rect class="frame" x="${PC.L}" y="${PC.T}" width="${PC.R - PC.L}" height="${PC.B - PC.T}"/>`;
+  s += T(24, (PC.T + PC.B) / 2, 'Drop in mealybugs, plant effect removed', 'lab', `transform="rotate(-90 24 ${(PC.T + PC.B) / 2})" text-anchor="middle"`);
+  TRT.forEach((tr, j) => { s += T(pX(j), PC.B + 24, tr.n, 'lab', 'text-anchor="middle"'); });
+  FERN.forEach((row, p) => row.forEach((v, j) => { s += `<circle cx="${n1(pX(j) + (p - 2) * 11)}" cy="${n1(pY(v - PLANT_EFF[p] + FERN_G))}" r="5.5" style="fill:var(--${TRT[j].tok}); stroke:var(--surface); stroke-width:1.2" opacity="${(kp * .6).toFixed(2)}"/>`; }));
+  FERN_TM.forEach((m, j) => { s += `<line x1="${n1(pX(j) - 48)}" y1="${n1(pY(m))}" x2="${n1(pX(j) + 48)}" y2="${n1(pY(m))}" style="stroke:var(--ink); stroke-width:3" opacity="${kp.toFixed(2)}"/>` +
+    T(pX(j) + 54, pY(m) + 5, m.toFixed(1), 'labm halo', `opacity="${kp.toFixed(2)}" style="fill:var(--ink)"`); });
+  if (k1 > 0){ const y = pY(ACTIVE), x0 = pX(0) - 62;
+    s += `<line x1="${n1(x0)}" y1="${n1(y)}" x2="${n1(lerp(x0, pX(2) + 48, k1))}" y2="${n1(y)}" style="stroke:var(--acc); stroke-width:2; stroke-dasharray:6 4"/>`;
+    s += arrow(x0, y, x0, lerp(y, pY(FERN_TM[0]), k1), 'var(--acc)', 3, 9);
+    if (k1 > .9) s += T(pX(1) - 30, y - 9, `Spores and Oil average ${ACTIVE.toFixed(2)}`, 'labm halo', 'style="fill:var(--acc)"') +
+      T(x0 + 9, (y + pY(FERN_TM[0])) / 2 + 5, fmt(FERN_TM[0] - ACTIVE), 'lab halo', 'style="fill:var(--acc)"'); }
+  if (k2 > 0){ const y = pY(FERN_TM[2]), x0 = pX(1) - 62;
+    s += `<line x1="${n1(x0)}" y1="${n1(y)}" x2="${n1(lerp(x0, pX(2) - 48, k2))}" y2="${n1(y)}" style="stroke:var(--acc2); stroke-width:2; stroke-dasharray:6 4"/>`;
+    s += arrow(x0, y, x0, lerp(y, pY(FERN_TM[1]), k2), 'var(--acc2)', 3, 9);
+    if (k2 > .9) s += T(x0 + 9, pY(14) + 5, fmt(FERN_TM[1] - FERN_TM[2]), 'lab halo', 'style="fill:var(--acc2)"'); }
+  const W = PC.R - PC.L, w1 = SS1 / SST * W, w2 = SS2 / SST * W;
+  s += T(PC.L, 456, `Treatment sum of squares ${SST.toFixed(1)}`, 'lab') + `<rect x="${PC.L}" y="466" width="${W}" height="26" rx="4" style="fill:var(--grid)"/>`;
+  if (kb1 > 0) s += `<rect x="${PC.L}" y="466" width="${n1(w1 * kb1)}" height="26" rx="4" style="fill:var(--acc)"/>` + T(PC.L, 514, `water vs active ${SS1.toFixed(1)}`, 'labm', `opacity="${kb1.toFixed(2)}" style="fill:var(--acc)"`);
+  if (kb2 > 0) s += `<rect x="${n1(PC.L + w1)}" y="466" width="${n1(w2 * kb2)}" height="26" rx="4" style="fill:var(--acc2)"/>` + T(PC.R, 514, `spores vs oil ${SS2.toFixed(1)}`, 'labm', `text-anchor="end" opacity="${kb2.toFixed(2)}" style="fill:var(--acc2)"`);
+  return s; }
+function plannedTick(t){ const a = $('pc1'), b = $('pc2'); if (!a) return; a.classList.toggle('on', (t >= .2 && t < .55) || t >= .84); b.classList.toggle('on', t >= .55); }
+
+/* ---------- step 11: overview ---------- */
+function drawOverview(t){ let s = ''; const tiles = [[20, 16, 'CRD', 'nothing to block'], [310, 16, 'RCBD', 'one source: plants'], [20, 286, 'Latin square', 'two sources: rows and columns'], [310, 286, 'Split plot', 'one factor needs big plots']];
+  tiles.forEach(([x, y, name, sub], i) => { const k = seg(t, i * .12, i * .12 + .3); s += `<g opacity="${k.toFixed(2)}" transform="translate(${x} ${y + (1 - k) * 14})">` +
+    `<rect width="270" height="256" rx="10" style="fill:var(--bg); stroke:var(--rule)"/>` + T(14, 26, name, 'lab') + T(14, 44, sub, 'labm');
+    if (i === 0) CRD_L.forEach((d, c) => { s += `<rect x="${n1(50 + Math.floor(c / 8) * 44)}" y="${n1(58 + (c % 8) * 23)}" width="40" height="20" rx="3" style="fill:var(--${DIET_TOK[d - 1]})"/>`; });
+    if (i === 1) RCBD_P.forEach((row, r) => { s += `<rect x="40" y="${54 + r * 37}" width="188" height="37" rx="6" style="fill:none; stroke:var(--acc2); stroke-width:1.5"/>`;
+      [...row].forEach((ch, c) => { s += `<rect x="${n1(48 + c * 60)}" y="${n1(56 + r * 37)}" width="56" height="33" rx="4" style="fill:var(--${TRT[TL[ch]].tok})"/>`; }); });
+    if (i === 2) [...LAT].forEach((L, j) => { s += `<rect x="${n1(52 + (j % 6) * 29)}" y="${n1(58 + Math.floor(j / 6) * 29)}" width="27" height="27" rx="3" style="fill:var(--${LAT_TOK[L]})"/>`; });
+    if (i === 3) SPLIT.forEach(([id, a, bs], j) => { const px = 30 + (j % 4) * 54, py = 58 + Math.floor(j / 4) * 64; const b2 = bs.slice(0, 2) === 'b2' ? 0 : 1;
+      s += `<rect x="${px}" y="${py}" width="50" height="58" rx="4" style="fill:var(--${A_TOK[a]})"/><rect x="${px + b2 * 25}" y="${py}" width="25" height="58" style="fill:url(#hatch2)"/><line x1="${px + 25}" y1="${py}" x2="${px + 25}" y2="${py + 58}" style="stroke:var(--ink); stroke-width:1.5"/>`; });
+    s += `</g>`; });
+  return `<defs><pattern id="hatch2" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" style="fill:none"/><line x1="0" y1="0" x2="0" y2="6" style="stroke:var(--ink); stroke-width:1.6; opacity:.4"/></pattern></defs>` + s; }
+const QUIZ = [
+  ['36 identical pots in one growth chamber, testing 3 soil mixes.', 'CRD', 'The pots are alike, so there is nothing to block. Randomize freely.'],
+  ['4 fungicides on 20 greenhouse benches. Light drops from the door to the back wall.', 'RCBD', 'Group benches by distance from the door. Each group is a block and gets all 4 fungicides.'],
+  ['4 tasters each rate 4 cheeses, one cheese per session over 4 sessions. Tasters differ and so do sessions.', 'Latin square', 'Taster and session are two blocks that cross, just like subject and period in the workshop.'],
+  ['3 irrigation schedules that must cover whole fields, plus 2 nitrogen rates.', 'Split plot', 'Irrigation goes on whole plots. Nitrogen goes on the halves.']];
+function quizWidget(){ return `<div class="panel quiz"><h3>Which design fits?</h3>${QUIZ.map((q, i) => `<div class="q" data-q="${i}"><p>${q[0]}</p><div class="opts">${['CRD', 'RCBD', 'Latin square', 'Split plot'].map(o => `<button type="button" data-o="${o}">${o}</button>`).join('')}</div><p class="fb" id="fb-${i}"></p></div>`).join('')}</div>`; }
+function quizBind(){ document.querySelectorAll('.quiz .q').forEach(q => { const i = +q.dataset.q; q.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+  const ok = b.dataset.o === QUIZ[i][1]; q.querySelectorAll('button').forEach(x => x.classList.remove('right', 'wrong')); b.classList.add(ok ? 'right' : 'wrong');
+  $('fb-' + i).textContent = ok ? 'Yes. ' + QUIZ[i][2] : 'Not quite. Ask what else makes the units differ.'; })); }); }
+
+/* ---------- steps ---------- */
+const legendFor = list => list.map(([tok, name, hatch]) => `<span><i style="background:${hatch ? 'repeating-linear-gradient(45deg, var(--surface) 0 3px, var(--muted) 3px 5px)' : 'var(--' + tok + ')'}"></i>${name}</span>`).join('');
+const STEPS = [
+{ title:'Completely randomized design', dur:300,
+  legend:legendFor(DIET_TOK.map((k, i) => [k, 'Diet ' + (i + 1)])),
+  body:`<p>Every experiment has treatments, experimental units, and a rule that says which unit gets which treatment. That rule is the design.</p>
+  <p>In a completely randomized design (CRD) the rule has no restrictions. Here 4 diets go to 32 rats, 8 rats per diet, and every arrangement is equally likely.</p>
+  <p>The layout on the left is the one <code>design.crd()</code> made in the pre-lecture with <code>seed = 217</code>. Press Shuffle to draw a new one.</p>`,
+  widget:() => `<div class="panel"><h3>Model</h3><div class="model">y<sub>ij</sub> = μ + α<sub>i</sub> + ε<sub>ij</sub></div>
+    <pre class="code">design.crd(trt = levels(rat.dat$Diet), r = 8, seed = 217)</pre>
+    <div class="row"><button type="button" id="crdshuf">Shuffle</button><button type="button" id="crdreset">Back to seed 217</button></div></div>`,
+  enter:now => { crdDeal(now); $('crdshuf').onclick = () => crdShuffle(false); $('crdreset').onclick = () => crdShuffle(true); },
+  live:now => mvBusy(crd.m, now, 32), draw:drawCRD },
+
+{ title:'The CRD model on the rat data', dur:7200,
+  legend:legendFor(DIET_TOK.map((k, i) => [k, 'Diet ' + (i + 1)])),
+  body:`<p>The model splits each rat's liver weight into three pieces. Watch them appear on the real data from <code>ratweight.CRD.csv</code>.</p>
+  <p><b>μ</b> is the overall average, ${RAT_G.toFixed(2)}. Each <b>α<sub>i</sub></b> is how far one diet's average sits from μ. Each <b>ε<sub>ij</sub></b> is how far one rat sits from its own diet's average.</p>
+  <p>The ANOVA asks whether the α's are big compared with the ε's. Here F = 4.66 on 3 and 25 df and p = 0.010, so the diets differ.</p>
+  <p>The file has 29 rats (7, 8, 6 and 8 per diet), a few short of the 32 in the planned layout.</p>`,
+  widget:() => `<div class="panel"><ol class="chips" id="chips"><li>μ grand mean</li><li>α<sub>i</sub> diet effect</li><li>ε<sub>ij</sub> leftover noise</li></ol>
+    <div class="model">y<sub>ij</sub> = <span id="m-mu">μ</span> + <span id="m-a">α<sub>i</sub></span> + <span id="m-e">ε<sub>ij</sub></span></div></div>`,
+  tick:t => { const ph = t < .14 ? -1 : t < .36 ? 0 : t < .62 ? 1 : 2; document.querySelectorAll('#chips li').forEach((li, i) => li.classList.toggle('on', i === ph));
+    [['m-mu', 0], ['m-a', 1], ['m-e', 2]].forEach(([id, i]) => { const el = $(id); if (el) el.classList.toggle('on', ph === i); }); },
+  draw:drawRat },
+
+{ title:'A CRD when the plants differ', dur:300,
+  legend:legendFor(TRT.map(x => [x.tok, x.n])),
+  body:`<p>Now the fern study. Five plants each have three pairs of leaves, and three pest treatments go on the leaves.</p>
+  <p>The plants are not alike. The green bars show how much each plant's mealybug count dropped on average in the real data. Plant 2 dropped by ${PLANT_EFF[1].toFixed(1)}, plant 1 by only ${PLANT_EFF[0].toFixed(1)}.</p>
+  <p>With a CRD, chance decides which plants each treatment is on. In this layout Oil is on plant 2 twice, so part of Oil's result would come from plant 2.</p>
+  <p>Press Shuffle a few times. The bars change with every new layout.</p>`,
+  widget:() => luckWidget() + `<div class="row"><button type="button" id="plshuf">Shuffle as a CRD</button></div>`,
+  enter:now => { plants.mode = 'crd'; plSet(CRD_P, now); $('plshuf').onclick = plShuffle; },
+  live:now => mvBusy(plants.m, now, 15), tick:luckTick, draw:drawPlants },
+
+{ title:'Randomized complete block design', dur:300,
+  legend:legendFor(TRT.map(x => [x.tok, x.n])),
+  body:`<p>A randomized complete block design (RCBD) fixes this. Each plant is a block, and every treatment appears once in every block. Randomization happens only inside each block.</p>
+  <p>Now every treatment gets the same plants, so the bars are all equal. The plant effect can no longer favor one treatment.</p>
+  <p>The model gets a block term β<sub>j</sub>. This layout is the one <code>design.rcbd()</code> made in the pre-lecture with <code>seed = 217</code>. Press Shuffle. The order within each plant changes, but each plant always has one leaf pair of each treatment.</p>`,
+  widget:() => `<div class="panel"><h3>Model</h3><div class="model">y<sub>ij</sub> = μ + α<sub>i</sub> + <span class="on2">β<sub>j</sub></span> + ε<sub>ij</sub></div></div>` + luckWidget() + `<div class="row"><button type="button" id="plshuf">Shuffle within plants</button></div>`,
+  enter:now => { plants.mode = 'rcbd'; plSet(RCBD_P, now); $('plshuf').onclick = plShuffle; },
+  live:now => mvBusy(plants.m, now, 15), tick:luckTick, draw:drawPlants },
+
+{ title:'RCBD analysis of the fern data', dur:5200,
+  legend:legendFor(TRT.map(x => [x.tok, x.n])),
+  body:`<p>These are the real data from <code>cycad_RCBD.csv</code>. Each grey line is one plant. The lines run roughly parallel, so a plant that responds well tends to respond well to every treatment.</p>
+  <p>The RCBD analysis removes each plant's average. The treatment averages stay where they are (Water ${FERN_TM[0].toFixed(1)}, Spores ${FERN_TM[1].toFixed(1)}, Oil ${FERN_TM[2].toFixed(1)}), but the scatter around them shrinks.</p>
+  <p>The data are the same in both analyses. Adding plants as blocks lowers the leftover variance from 69.0 to 17.7, and the p-value for treatment drops from 0.081 to 0.0037.</p>`,
+  widget:() => `<div class="cards"><div class="card" id="card-crd"><b>Ignoring plants</b><span class="big">p = 0.081</span><small>leftover variance 69.0 · F = 3.13</small><small><code>lm(avgchange ~ trt)</code></small></div>
+    <div class="card" id="card-rcbd"><b>Plants as blocks</b><span class="big">p = 0.0037</span><small>leftover variance 17.7 · F = 12.19</small><small><code>lm(avgchange ~ trt + plant)</code></small></div></div>
+    <div class="row"><button type="button" id="fernbtn">Show the raw data</button></div>`,
+  enter:() => { fern.manual = false; $('fernbtn').onclick = () => { const now = performance.now(), k = fernK(clamp((now - t0) / STEPS[idx].dur), now); fern.manual = true; fern.from = k; fern.to = k >= .5 ? 0 : 1; fern.start = now; requestRender(); }; },
+  live:now => fern.manual && now - fern.start < 1050, tick:fernTick, draw:drawFern },
+
+{ title:'Latin square design', dur:4600,
+  legend:legendFor([...'abcdef'].map(L => [LAT_TOK[L], 'operator ' + L])),
+  body:`<p>Sometimes two nuisance sources cross each other, such as field rows and field columns, or people and time periods. A Latin square blocks both.</p>
+  <p>Each treatment appears exactly once in every row and once in every column. This 6 × 6 square is <code>cochran.latin</code> from the pre-lecture, where six operators (a to f) measured wheat shoot heights.</p>
+  <p>Shuffle the rows, columns and letters, and the rule still holds. That is how a Latin square gets randomized.</p>
+  <p>The pre-lecture asks why <code>latin_square(t = 6)</code> has no reps argument. The number of treatments fixes everything: t rows, t columns and t² units.</p>`,
+  widget:() => { const W = [[1,3,2],[3,2,1],[2,1,3]], R = [[1799,1846,2147],[2075,1156,1777],[1396,868,2291]], NM = ['solution','tablet','capsule'], TK = ['ta','tc','td'];
+    return `<div class="row"><button type="button" id="latshuf">Shuffle rows, columns and letters</button><button type="button" id="latreset">Back to the pre-lecture square</button></div>
+    <div class="panel"><h3>The workshop's square</h3><p class="cap">In the workshop, 3 people each get every drug form once, one per period. Person and period are the two blocks. This is <code>Crossover_Latin.csv</code>.</p>
+    <div class="sq"><div class="h"></div><div class="h">Period 1</div><div class="h">Period 2</div><div class="h">Period 3</div>
+    ${[0, 1, 2].map(s => `<div class="h">Subject ${s + 1}</div>` + [0, 1, 2].map(p => `<div class="c" style="background:var(--${TK[W[s][p] - 1]}); color:var(--on-${TK[W[s][p] - 1]})">${NM[W[s][p] - 1]}<small>${R[s][p]}</small></div>`).join('')).join('')}</div></div>`; },
+  enter:() => { lat.sel = null; $('latshuf').onclick = () => latShuffle(false); $('latreset').onclick = () => latShuffle(true); },
+  live:now => latBusy(now), draw:drawLatin },
+
+{ title:'Split-plot design', dur:6800,
+  legend:legendFor([['tc', 'a1'], ['ta', 'a2'], ['td', 'a3'], ['', 'b2 striped, b1 plain', true]]),
+  body:`<p>Some factors only work on a big area. Irrigation has to cover a whole plot, while fertilizer can go on a small strip.</p>
+  <p>A split-plot design first randomizes the factor that needs big plots (a1 to a3) to whole plots. Then it splits each whole plot in two and randomizes the second factor (b1, b2) to the halves.</p>
+  <p>There are now two sizes of experimental unit, so the model has two error terms. γ<sub>k(i)</sub> is the whole-plot error and ε<sub>k(ij)</sub> is the subplot error.</p>
+  <p>The layout matches <code>design.split()</code> in the pre-lecture, with 3 whole-plot treatments, 2 subplot treatments and 4 replicates, for 24 subplots.</p>`,
+  widget:() => `<div class="panel"><ol class="chips" id="chips"><li>12 whole plots</li><li>a randomized to whole plots</li><li>each plot split</li><li>b randomized within plots</li></ol>
+    <div class="model">y<sub>ijk</sub> = <span id="sp-mu">μ</span> + <span id="sp-a">α<sub>i</sub></span> + <span id="sp-g">γ<sub>k(i)</sub></span> + <span id="sp-b">β<sub>j</sub></span> + <span id="sp-ab">αβ<sub>ij</sub></span> + <span id="sp-e">ε<sub>k(ij)</sub></span></div>
+    <p class="cap">Blue terms live on whole plots. Green terms live on subplots.</p></div>`,
+  tick:splitTick, draw:drawSplit },
+
+{ title:'Hasse diagrams', dur:8200,
+  legend:'',
+  body:`<p>A Hasse diagram shows how the terms of a design sit inside each other. Each line runs from a coarser term down to a finer one. Terms in parentheses are random. Here those are the two kinds of experimental unit.</p>
+  <p>Use it to find the right error. Each fixed term is tested against the first random term below it. Whole Plot is tested against (Experimental Units). Subplot and Whole Plot : Subplot are tested against (Experimental Unit : Subplot).</p>
+  <p>The numbers under each box are levels and degrees of freedom. The df add up to 24, one per subplot.</p>
+  <p>The matrix is <code>split.matrix</code> from the pre-lecture. Each TRUE draws one line. The workshop asks you to wrap this code in a function that takes six labels.</p>`,
+  widget:() => { const S = ['Intercept', 'Whole Plot', 'Subplot', '(EU)', 'WP : SP', '(EU : SP)'];
+    return `<div class="panel"><h3>split.matrix</h3><div class="tablewrap"><table class="mx"><thead><tr><th></th>${S.map((x, i) => `<th>${i + 1}</th>`).join('')}</tr></thead><tbody>
+    ${S.map((x, a) => `<tr><td>${a + 1} ${x}</td>${S.map((y, b) => `<td id="mx-${a}-${b}" class="f">F</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <pre class="code" id="hcode"></pre><p class="cap">EU means experimental unit and SP means subplot.</p></div>`; },
+  tick:hasseTick, draw:drawHasse },
+
+{ title:'Contrast coding', dur:300,
+  legend:'',
+  body:`<p>When a factor goes into <code>lm()</code>, R turns it into columns of numbers. The contrast matrix decides what each coefficient compares.</p>
+  <p>The pre-lecture uses the five pottery kilns with MgO as the response. Black dots are kiln averages and grey dots are single pots. Pick a coding to see what its coefficients measure.</p>`,
+  widget:contrastWidget,
+  enter:now => { ct.start = now; ct.auto = true; ct.focus = 0; contrastBind(); },
+  live:now => ctBusy(now) || now - ct.start < 1500, tick:(t, now) => contrastTick(now), draw:drawContrast },
+
+{ title:'Planned contrasts on the fern data', dur:7600,
+  legend:legendFor(TRT.map(x => [x.tok, x.n])),
+  body:`<p>The treatment F-test on the fern data (p = 0.0037) says the treatments differ, but not how. The study was set up to answer two questions. Does a pest treatment do better than plain water? Is oil better than spores?</p>
+  <p>Each question is a contrast. With 3 treatments there are 2 treatment df, so exactly 2 independent questions fit.</p>
+  <p>Water averages ${fmt(ACTIVE - FERN_TM[0])} less than the two active treatments (p = 0.018). Spores averages ${fmt(FERN_TM[2] - FERN_TM[1])} less than oil (p = 0.004). Both tests use the leftover variance from the block analysis, 17.7 on 8 df.</p>
+  <p>The two contrasts are orthogonal, so they split the treatment sum of squares into two parts with nothing left over. 156.4 + 275.6 = 432.0.</p>
+  <p>Plan contrasts before the data come in. Comparisons chosen after looking at the results need a correction such as Tukey's.</p>`,
+  widget:() => `<div class="panel"><h3>The two questions as contrasts</h3>
+    <div class="tablewrap"><table class="mx"><thead><tr><th>Treatment</th><th>Water vs active</th><th>Spores vs oil</th></tr></thead><tbody>
+    <tr><td>Water</td><td class="t">1</td><td class="f">0</td></tr><tr><td>Spores</td><td class="t">−1/2</td><td class="t">1</td></tr><tr><td>Oil</td><td class="t">−1/2</td><td class="t">−1</td></tr></tbody></table></div>
+    <p class="cap">Each column sums to 0. Multiplying the columns row by row and adding gives 1×0 + (−1/2)×1 + (−1/2)×(−1) = 0, so the two questions are orthogonal.</p>
+    <pre class="code">fern.dat$trt <- factor(fern.dat$trt, labels = c("Water", "Spores", "Oil"))
+fern.dat$plant <- factor(fern.dat$plant)
+contrasts(fern.dat$trt) <- cbind(water_vs_active = c(1, -1/2, -1/2),
+                                 spores_vs_oil   = c(0, 1, -1))
+summary(aov(avgchange ~ trt + plant, data = fern.dat),
+        split = list(trt = list("water vs active" = 1, "spores vs oil" = 2)))</pre></div>
+    <div class="cards"><div class="card" id="pc1"><b>Water vs active</b><span class="big">p = 0.018</span><small>difference ${fmt(FERN_TM[0] - ACTIVE)} · SS 156.4 · F = 8.82</small></div>
+    <div class="card" id="pc2"><b>Spores vs oil</b><span class="big">p = 0.004</span><small>difference ${fmt(FERN_TM[1] - FERN_TM[2])} · SS 275.6 · F = 15.55</small></div></div>
+    <p class="cap"><code>lm()</code> prints these two coefficients as −4.57 and −5.25, because the way the matrix is written sets their scale. The tests and p-values are the same.</p>`,
+  tick:plannedTick, draw:drawPlanned },
+
+{ title:'Choosing a design', dur:1600,
+  legend:'',
+  body:`<p>To choose a design, ask what makes your experimental units differ, besides the treatments.</p>
+  <ul><li>Nothing you know of: <b>CRD</b>.</li><li>One source, such as plants, benches or field strips: <b>RCBD</b>.</li><li>Two sources that cross, such as rows and columns or people and periods: <b>Latin square</b>.</li><li>One factor that only works on big plots: <b>split plot</b>.</li></ul>`,
+  widget:quizWidget, enter:() => quizBind(), draw:drawOverview }
+];
+
+/* ---------- engine ---------- */
+const svg = $('stage');
+let idx = 0, t0 = 0, raf = null;
+function render(now){ const s = STEPS[idx], el = now - t0, dur = REDUCED ? 0 : s.dur, t = dur ? clamp(el / dur) : 1;
+  svg.innerHTML = s.draw(t, now); svg.style.opacity = REDUCED ? 1 : clamp(el / 300).toFixed(3);
+  if (s.tick) s.tick(t, now);
+  return t < 1 || el < 320 || (s.live && s.live(now)); }
+function loop(now){ raf = render(now) ? requestAnimationFrame(loop) : null; }
+function requestRender(){ if (!raf) raf = requestAnimationFrame(loop); }
+function go(i){
+  idx = clamp(i, 0, STEPS.length - 1); const s = STEPS[idx], now = performance.now(); t0 = now;
+  $('stepnum').textContent = idx + 1; $('steptitle').textContent = s.title; $('stepbody').innerHTML = s.body;
+  $('widget').innerHTML = s.widget ? s.widget() : ''; $('stagecap').innerHTML = s.legend || '';
+  $('prev').disabled = idx === 0; $('next').disabled = idx === STEPS.length - 1;
+  document.querySelectorAll('#dots button').forEach((b, j) => { b.removeAttribute('aria-current'); if (j === idx) b.setAttribute('aria-current', 'step'); });
+  if (s.enter) s.enter(now);
+  const h = 'step-' + (idx + 1); if (location.hash.slice(1) !== h){ try { history.replaceState(null, '', '#' + h); } catch(e) {} }
+  if (raf) cancelAnimationFrame(raf); raf = null; requestRender(); }
+$('stepcount').textContent = STEPS.length;
+$('dots').innerHTML = STEPS.map((s, i) => `<li><button type="button" aria-label="Step ${i + 1}: ${s.title}">${i + 1}</button></li>`).join('');
+document.querySelectorAll('#dots button').forEach((b, i) => b.addEventListener('click', () => go(i)));
+$('prev').addEventListener('click', () => go(idx - 1));
+$('next').addEventListener('click', () => go(idx + 1));
+$('replay').addEventListener('click', () => go(idx));
+svg.addEventListener('click', e => { const g = e.target.closest && e.target.closest('[data-r]'); if (!g || idx !== 5) return; lat.sel = {r:lat.rp[+g.dataset.r], c:lat.cp[+g.dataset.c]}; requestRender(); });
+document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' && e.key === ' ') return;
+  if (e.key === 'ArrowRight') go(idx + 1); if (e.key === 'ArrowLeft') go(idx - 1); });
+function fromHash(){ const m = /^#step-(\d+)$/.exec(location.hash); return m ? clamp(+m[1] - 1, 0, STEPS.length - 1) : 0; }
+window.addEventListener('hashchange', () => { const i = fromHash(); if (i !== idx) go(i); });
+go(fromHash());
+</script>
+</body>
+</html>

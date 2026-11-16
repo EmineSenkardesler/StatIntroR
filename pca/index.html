@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light} body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+a.home{font-family:var(--mono); font-size:13px; color:var(--muted); text-decoration:none} a.home:hover{color:var(--ink); text-decoration:underline}</style>
+<title>PCA Step by Step</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;600;700&family=Spectral:wght@500;600&display=swap">
+<style>
+/* Layout: a lab bench. The data stage sits on the left, the notebook page on the right. */
+:root{
+  --bg:#ECEFEB; --surface:#F8F9F6; --ink:#1B2220; --muted:#58635E; --rule:#CBD2CA; --grid:#DFE3DC;
+  --pc1:#2443C0; --pc2:#0A7C5F; --glo:#7D1128; --wal:#9A6C38; --nf:#2F4858; --onink:#F8F9F6;
+  --display:"Spectral", Georgia, "Times New Roman", serif;
+  --body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121715; --surface:#1A201E; --ink:#E5EAE7; --muted:#9BA6A1; --rule:#323B37; --grid:#262E2B;
+    --pc1:#8AA2FF; --pc2:#52C9A3; --glo:#E8738C; --wal:#DDB47E; --nf:#86BAD0; --onink:#121715;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121715; --surface:#1A201E; --ink:#E5EAE7; --muted:#9BA6A1; --rule:#323B37; --grid:#262E2B;
+  --pc1:#8AA2FF; --pc2:#52C9A3; --glo:#E8738C; --wal:#DDB47E; --nf:#86BAD0; --onink:#121715;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.55}
+.wrap{max-width:1200px; margin:0 auto; padding-block:28px 40px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex; flex-direction:column; gap:22px}
+header{display:flex; flex-direction:column; gap:6px; max-width:68ch}
+.eyebrow{font-family:var(--mono); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+h1{font-family:var(--display); font-weight:600; font-size:clamp(30px, 4.4vw, 44px); line-height:1.08; margin:0; text-wrap:balance}
+.lede{margin:0; color:var(--muted)}
+.bench{display:grid; grid-template-columns:minmax(0, 1.12fr) minmax(0, 1fr); gap:28px; align-items:start}
+.stage{margin:0; background:var(--surface); border:1px solid var(--rule); border-radius:8px; padding:10px 10px 12px; position:sticky; top:calc(env(safe-area-inset-top, 0px) + 12px)}
+.stage svg{display:block; width:100%; height:auto}
+.legend{display:flex; flex-wrap:wrap; gap:6px 18px; padding:4px 8px 0; font-size:14px; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:7px}
+.legend i{width:11px; height:11px; border-radius:50%; display:inline-block}
+.notes{min-width:0; display:flex; flex-direction:column; gap:14px}
+.stepmeta{font-family:var(--mono); font-size:13px; color:var(--muted); letter-spacing:.04em}
+.notes h2{font-family:var(--display); font-weight:600; font-size:clamp(24px, 2.8vw, 30px); line-height:1.15; margin:0; text-wrap:balance}
+#stepbody{display:flex; flex-direction:column; gap:10px; max-width:62ch}
+#stepbody p{margin:0}
+code{font-family:var(--mono); font-size:.88em; background:var(--grid); padding:1px 5px; border-radius:4px}
+.widget{display:flex; flex-direction:column; gap:10px; min-width:0}
+.widget:empty{display:none}
+.panel{border:1px solid var(--rule); background:var(--surface); border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; min-width:0}
+.panel h3{margin:0; font-size:13px; font-family:var(--mono); font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.mini svg{display:block; width:100%; height:auto}
+.cap{font-size:14px; color:var(--muted); margin:0}
+.chips{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px}
+.chips li{font-size:14px; padding:4px 11px; border-radius:999px; border:1px solid var(--rule); color:var(--muted); transition:background .3s, color .3s, border-color .3s}
+.chips li.on{background:var(--ink); color:var(--onink); border-color:var(--ink)}
+.chips li b{font-family:var(--mono); font-weight:500; margin-right:6px}
+label.row{display:flex; justify-content:space-between; align-items:baseline; font-size:15px}
+output, .num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+input[type=range]{width:100%; accent-color:var(--pc1)}
+.meter{height:14px; border-radius:7px; background:var(--grid); overflow:hidden}
+.meter > div{height:100%; width:50%; background:var(--pc1); border-radius:7px}
+.big{display:flex; flex-wrap:wrap; gap:8px 26px}
+.big div{display:flex; flex-direction:column}
+.big .num{font-size:30px; line-height:1.1}
+.big small{font-size:13px; color:var(--muted)}
+.c1{color:var(--pc1)} .c2{color:var(--pc2)}
+table{border-collapse:collapse; width:100%; font-size:14.5px}
+th, td{padding:5px 8px; text-align:right; border-bottom:1px solid var(--rule)}
+th:first-child, td:first-child{text-align:left}
+thead th{font-family:var(--mono); font-weight:500; font-size:12.5px; color:var(--muted); letter-spacing:.04em}
+td.num{font-family:var(--mono)}
+td.hi{font-weight:600; color:var(--ink); background:color-mix(in srgb, var(--pc1) 13%, transparent)}
+td.lo{color:var(--muted)}
+.tablewrap{overflow-x:auto}
+ol.rules{margin:0; padding-left:22px; display:flex; flex-direction:column; gap:6px}
+.controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:4px}
+button{font:inherit; font-size:15px; border-radius:6px; padding:8px 16px; cursor:pointer; border:1px solid var(--ink); background:transparent; color:var(--ink)}
+button.primary{background:var(--ink); color:var(--onink)}
+button:disabled{opacity:.35; cursor:default}
+button:focus-visible, input:focus-visible{outline:2px solid var(--pc1); outline-offset:2px}
+.spacer{flex:1}
+.dots{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px}
+.dots button{width:32px; height:32px; padding:0; border-radius:50%; border-color:var(--rule); color:var(--muted); font-family:var(--mono); font-size:13px}
+.dots button[aria-current="step"]{background:var(--pc1); border-color:var(--pc1); color:var(--onink)}
+#potinfo{font-size:15px}
+footer{font-size:13.5px; color:var(--muted); max-width:80ch; border-top:1px solid var(--rule); padding-top:12px}
+/* SVG text and marks */
+.tick{fill:var(--muted); font:15px var(--mono)}
+.atitle{fill:var(--ink); font:600 16px var(--body)}
+.grid{stroke:var(--grid); stroke-width:1}
+.frame{fill:none; stroke:var(--rule)}
+.zero{stroke:var(--muted); stroke-width:1.2; stroke-dasharray:5 5}
+.cross{stroke:var(--ink); stroke-width:1.4; stroke-dasharray:6 5; opacity:.55}
+.lbl{fill:var(--ink); font:600 16px var(--body); paint-order:stroke; stroke:var(--surface); stroke-width:5px; stroke-linejoin:round}
+.lbl.small{font:500 14px var(--mono)}
+.l1{stroke:var(--pc1); stroke-width:3}
+.l2{stroke:var(--pc2); stroke-width:3}
+.lt{stroke:var(--ink); stroke-width:2.2; opacity:.85}
+.proj{stroke-width:1; opacity:.45}
+.f1{fill:var(--pc1)} .f2{fill:var(--pc2)} .fi{fill:var(--ink)} .fm{fill:var(--muted)}
+.t1{fill:var(--pc1)} .t2{fill:var(--pc2)}
+.circ{fill:none; stroke:var(--muted); stroke-dasharray:4 5}
+.thresh{stroke:var(--pc1); stroke-width:1.2; stroke-dasharray:3 5; opacity:.7}
+.old{stroke:var(--muted); stroke-width:2.4}
+.pot{stroke:var(--surface); stroke-width:1.2}
+.pot.sel{stroke:var(--ink); stroke-width:3}
+.pick .pot{cursor:pointer}
+@media (max-width: 880px){
+  .bench{grid-template-columns:minmax(0,1fr)}
+  .stage{position:static}
+}
+@media (prefers-reduced-motion: reduce){ .chips li{transition:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="home" href="../">← All StatIntroR walkthroughs</a>
+    <div class="eyebrow">CPSC 442 · Week 12 · Multivariate methods</div>
+    <h1>PCA, step by step</h1>
+    <p class="lede">How principal components are built and how to read them, using the Romano-British pottery data from the pre-lecture.</p>
+  </header>
+
+  <main class="bench">
+    <figure class="stage">
+      <svg id="stage" viewBox="0 0 600 590" role="img" aria-labelledby="steptitle">
+        <defs><clipPath id="plotclip"><rect x="70" y="18" width="510" height="510"/></clipPath></defs>
+        <g id="axesG"></g>
+        <g id="underG" clip-path="url(#plotclip)"></g>
+        <g id="ptsG"></g>
+        <g id="overG"></g>
+      </svg>
+      <figcaption class="legend" aria-label="Region colors">
+        <span><i style="background:var(--glo)"></i>Gloucester</span>
+        <span><i style="background:var(--wal)"></i>Wales</span>
+        <span><i style="background:var(--nf)"></i>New Forest</span>
+      </figcaption>
+    </figure>
+
+    <section class="notes" aria-live="polite">
+      <div class="stepmeta">Step <span id="stepnum">1</span> of <span id="stepcount">11</span></div>
+      <h2 id="steptitle"></h2>
+      <div id="stepbody"></div>
+      <div id="widget" class="widget"></div>
+      <div class="controls">
+        <button id="prev" type="button">Back</button>
+        <button id="replay" type="button">Replay</button>
+        <span class="spacer"></span>
+        <button id="next" type="button" class="primary">Next</button>
+      </div>
+      <ol class="dots" id="dots" aria-label="Steps"></ol>
+    </section>
+  </main>
+
+  <footer>Data: <code>RBPottery</code> from the <code>archdata</code> R package, 48 pots and 9 chemical oxides (percent of the pot). The nine-chemical results match <code>FactoMineR::PCA()</code> on the scaled data, as in the Week 12 pre-lecture. The two-chemical steps use only Al₂O₃ and MgO.</footer>
+</div>
+
+<script>
+const DATA = {"pots":[{"id":"GA1","al":18.8,"mg":2,"region":"Gloucester","kiln":"Gloucester","d1":-0.021,"d2":1.863},{"id":"GA2","al":16.9,"mg":1.65,"region":"Gloucester","kiln":"Gloucester","d1":-0.204,"d2":1.649},{"id":"GA3","al":18.2,"mg":1.82,"region":"Gloucester","kiln":"Gloucester","d1":-0.269,"d2":1.334},{"id":"GA4","al":17.4,"mg":1.71,"region":"Gloucester","kiln":"Gloucester","d1":1.34,"d2":0.757},{"id":"GA5","al":16.9,"mg":1.56,"region":"Gloucester","kiln":"Gloucester","d1":-0.255,"d2":1.677},{"id":"GB1","al":17.8,"mg":1.83,"region":"Gloucester","kiln":"Gloucester","d1":-0.119,"d2":1.943},{"id":"GB2","al":18.8,"mg":2.06,"region":"Gloucester","kiln":"Gloucester","d1":-0.416,"d2":1.382},{"id":"GB3","al":16.5,"mg":1.81,"region":"Gloucester","kiln":"Gloucester","d1":0.054,"d2":2.457},{"id":"GB4","al":18,"mg":2.06,"region":"Gloucester","kiln":"Gloucester","d1":-0.17,"d2":1.475},{"id":"GB5","al":15.8,"mg":1.62,"region":"Gloucester","kiln":"Gloucester","d1":-0.026,"d2":1.081},{"id":"GC1","al":14.6,"mg":1.67,"region":"Gloucester","kiln":"Gloucester","d1":-0.233,"d2":0.239},{"id":"GC2","al":13.7,"mg":1.5,"region":"Gloucester","kiln":"Gloucester","d1":-0.909,"d2":-0.831},{"id":"GC3","al":14.6,"mg":1.63,"region":"Gloucester","kiln":"Gloucester","d1":-0.151,"d2":1.126},{"id":"GC4","al":14.8,"mg":1.62,"region":"Gloucester","kiln":"Gloucester","d1":0.1,"d2":1.258},{"id":"GD1","al":17.1,"mg":1.99,"region":"Gloucester","kiln":"Gloucester","d1":0.355,"d2":2.001},{"id":"GD2","al":16.8,"mg":1.86,"region":"Gloucester","kiln":"Gloucester","d1":0.288,"d2":2.022},{"id":"GD3","al":15.8,"mg":1.94,"region":"Gloucester","kiln":"Gloucester","d1":1.167,"d2":2.687},{"id":"GD4","al":18.6,"mg":2.33,"region":"Gloucester","kiln":"Gloucester","d1":-0.028,"d2":1.841},{"id":"GD5","al":16.9,"mg":1.83,"region":"Gloucester","kiln":"Gloucester","d1":0.592,"d2":3.114},{"id":"GE1","al":18.9,"mg":2.05,"region":"Gloucester","kiln":"Gloucester","d1":-0.637,"d2":0.836},{"id":"GE2","al":18,"mg":1.94,"region":"Gloucester","kiln":"Gloucester","d1":-0.773,"d2":0.681},{"id":"GE3","al":17.8,"mg":1.92,"region":"Gloucester","kiln":"Gloucester","d1":-0.424,"d2":0.893},{"id":"C01","al":14.4,"mg":4.3,"region":"Wales","kiln":"Llanedeyrn","d1":2.317,"d2":0.193},{"id":"CO2","al":13.8,"mg":3.43,"region":"Wales","kiln":"Llanedeyrn","d1":1.606,"d2":-0.605},{"id":"CO3","al":14.6,"mg":3.88,"region":"Wales","kiln":"Llanedeyrn","d1":1.547,"d2":-0.542},{"id":"C04","al":11.5,"mg":5.64,"region":"Wales","kiln":"Llanedeyrn","d1":1.601,"d2":-2.648},{"id":"CO5","al":13.8,"mg":5.34,"region":"Wales","kiln":"Llanedeyrn","d1":2.077,"d2":-0.677},{"id":"C06","al":10.9,"mg":3.47,"region":"Wales","kiln":"Llanedeyrn","d1":1.195,"d2":-2.119},{"id":"C07","al":10.1,"mg":4.26,"region":"Wales","kiln":"Llanedeyrn","d1":1.702,"d2":-2.063},{"id":"C08","al":11.6,"mg":5.91,"region":"Wales","kiln":"Llanedeyrn","d1":1.73,"d2":-2.088},{"id":"C09","al":11.1,"mg":4.52,"region":"Wales","kiln":"Llanedeyrn","d1":1.81,"d2":-1.436},{"id":"C10","al":13.4,"mg":7.23,"region":"Wales","kiln":"Llanedeyrn","d1":3.03,"d2":-1.377},{"id":"C11","al":12.4,"mg":5.69,"region":"Wales","kiln":"Llanedeyrn","d1":3.048,"d2":-0.806},{"id":"C12","al":13.1,"mg":5.51,"region":"Wales","kiln":"Llanedeyrn","d1":2.31,"d2":-1.074},{"id":"C13","al":12.7,"mg":4.45,"region":"Wales","kiln":"Llanedeyrn","d1":4.138,"d2":-0.336},{"id":"C14","al":12.5,"mg":3.94,"region":"Wales","kiln":"Llanedeyrn","d1":0.518,"d2":-0.659},{"id":"GO1","al":11.6,"mg":3.77,"region":"Wales","kiln":"Caldicot","d1":1.697,"d2":-2.118},{"id":"G02","al":11.8,"mg":3.94,"region":"Wales","kiln":"Caldicot","d1":1.485,"d2":-2.338},{"id":"T11","al":18.3,"mg":0.67,"region":"New Forest","kiln":"Islands Thorns","d1":-2.819,"d2":-1.755},{"id":"T12","al":15.8,"mg":0.63,"region":"New Forest","kiln":"Islands Thorns","d1":-3.27,"d2":-1.188},{"id":"T13","al":18,"mg":0.67,"region":"New Forest","kiln":"Islands Thorns","d1":-2.966,"d2":-1.195},{"id":"T14","al":18,"mg":0.68,"region":"New Forest","kiln":"Islands Thorns","d1":-3.036,"d2":-0.325},{"id":"T16","al":20.8,"mg":0.72,"region":"New Forest","kiln":"Islands Thorns","d1":-3.62,"d2":-0.272},{"id":"A11","al":17.7,"mg":0.56,"region":"New Forest","kiln":"Ashley Rails","d1":-2.937,"d2":-1.688},{"id":"Al2","al":18.3,"mg":0.67,"region":"New Forest","kiln":"Ashley Rails","d1":-2.892,"d2":-0.892},{"id":"A16","al":16.7,"mg":0.53,"region":"New Forest","kiln":"Ashley Rails","d1":-3.169,"d2":-1.793},{"id":"A18","al":14.8,"mg":0.67,"region":"New Forest","kiln":"Ashley Rails","d1":-2.984,"d2":-1.067},{"id":"A26","al":19.1,"mg":0.6,"region":"New Forest","kiln":"Ashley Rails","d1":-3.379,"d2":-0.618}],"eig":[{"ev":3.6962,"pct":41.07,"cum":41.07},{"ev":2.3414,"pct":26.02,"cum":67.08},{"ev":1.0507,"pct":11.67,"cum":78.76},{"ev":0.5882,"pct":6.54,"cum":85.29},{"ev":0.4359,"pct":4.84,"cum":90.14},{"ev":0.3714,"pct":4.13,"cum":94.26},{"ev":0.2465,"pct":2.74,"cum":97},{"ev":0.1762,"pct":1.96,"cum":98.96},{"ev":0.0935,"pct":1.04,"cum":100}],"loadings":[{"name":"Al2O3","d1":-0.673,"d2":0.559},{"name":"Fe2O3","d1":0.69,"d2":0.595},{"name":"MgO","d1":0.856,"d2":-0.368},{"name":"CaO","d1":0.142,"d2":0.813},{"name":"Na2O","d1":0.462,"d2":0.7},{"name":"K2O","d1":0.845,"d2":-0.062},{"name":"TiO2","d1":-0.598,"d2":0.361},{"name":"MnO","d1":0.831,"d2":0.017},{"name":"BaO","d1":0.193,"d2":0.503}],"sds":[{"name":"Al2O3","mean":15.615,"sd":2.7025},{"name":"Fe2O3","mean":5.826,"sd":2.3463},{"name":"MgO","mean":2.543,"sd":1.7256},{"name":"CaO","mean":0.511,"sd":0.4498},{"name":"Na2O","mean":0.245,"sd":0.174},{"name":"K2O","mean":3.181,"sd":0.9218},{"name":"TiO2","mean":0.853,"sd":0.2139},{"name":"MnO","mean":0.08,"sd":0.0666},{"name":"BaO","mean":0.017,"sd":0.0031}]};
+
+/* ---------- numbers ---------- */
+const POTS = DATA.pots, N = POTS.length, D2R = Math.PI / 180;
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const REGC = {"Gloucester":"var(--glo)", "Wales":"var(--wal)", "New Forest":"var(--nf)"};
+const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+const sdev = a => { const m = mean(a); return Math.sqrt(a.reduce((s, v) => s + (v - m) ** 2, 0) / (a.length - 1)); };
+const AL = POTS.map(p => p.al), MG = POTS.map(p => p.mg);
+const mAl = mean(AL), mMg = mean(MG), sAl = sdev(AL), sMg = sdev(MG);
+const Z = POTS.map(p => [(p.al - mAl) / sAl, (p.mg - mMg) / sMg]);
+const R = Z.reduce((s, z) => s + z[0] * z[1], 0) / (N - 1);
+const uv = deg => [Math.cos(deg * D2R), Math.sin(deg * D2R)];
+const spread = deg => { const [c, s] = uv(deg); return Z.reduce((a, z) => a + (z[0] * c + z[1] * s) ** 2, 0) / (N - 1); };
+let PC1A = 0.5 * Math.atan2(2 * R, 0) / D2R;
+if (Math.sin(PC1A * D2R) < 0) PC1A += 180;          // point PC1 toward more MgO, like the software does
+const PC2A = PC1A + 90;
+const EV1 = spread(PC1A), EV2 = spread(PC2A);
+const U1 = uv(PC1A), U2 = uv(PC2A);
+const LOAD2 = { "Al₂O₃": [U1[0] * Math.sqrt(EV1), U2[0] * Math.sqrt(EV2)], "MgO": [U1[1] * Math.sqrt(EV1), U2[1] * Math.sqrt(EV2)] };
+const EIG = DATA.eig, LD = DATA.loadings, SDS = DATA.sds;
+const NICE = {Al2O3:"Al₂O₃", Fe2O3:"Fe₂O₃", MgO:"MgO", CaO:"CaO", Na2O:"Na₂O", K2O:"K₂O", TiO2:"TiO₂", MnO:"MnO", BaO:"BaO"};
+const CENT = {}; ["Gloucester","Wales","New Forest"].forEach(r => { const g = POTS.filter(p => p.region === r); CENT[r] = [mean(g.map(p => p.d1)), mean(g.map(p => p.d2))]; });
+
+const fmt = (v, d = 2) => (v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
+const sgn = (v, d = 2) => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(d);
+const pct = (v, tot) => (100 * v / tot).toFixed(1);
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+
+/* ---------- geometry ---------- */
+const G = {L:70, T:18, W:510, H:510}; G.R = G.L + G.W; G.B = G.T + G.H; G.cx = G.L + G.W / 2; G.cy = G.T + G.H / 2;
+const ZS = 3.6, NS = 4.6;                       // half-widths for the scaled 2D view and the nine-chemical view
+const toS = (x, y, s) => ({x: G.cx + x / s * G.W / 2, y: G.cy - y / s * G.H / 2});
+const mX = (v, d) => G.L + (v - d[0]) / (d[1] - d[0]) * G.W;
+const mY = (v, d) => G.B - (v - d[0]) / (d[1] - d[0]) * G.H;
+const DOM = {
+  FIT:    {x:[9, 22], y:[0, 8]},
+  RULER:  {x:[0, 24], y:[0, 24]},
+  CENTER: {x:[mAl - 12, mAl + 12], y:[mMg - 12, mMg + 12]},
+  STD:    {x:[mAl - ZS * sAl, mAl + ZS * sAl], y:[mMg - ZS * sMg, mMg + ZS * sMg]}
+};
+const lerpDom = (a, b, k) => ({x:[lerp(a.x[0], b.x[0], k), lerp(a.x[1], b.x[1], k)], y:[lerp(a.y[0], b.y[0], k), lerp(a.y[1], b.y[1], k)]});
+const range = (a, b, s) => { const r = []; for (let v = a; v <= b + 1e-9; v += s) r.push(+v.toFixed(6)); return r; };
+const TK = {
+  FIT:    {x: range(10, 22, 2).map(v => ({raw:v, lab:v})), y: range(0, 8, 2).map(v => ({raw:v, lab:v})),
+           t:["Al₂O₃ (% of the pot)", "MgO (% of the pot)"]},
+  RULER:  {x: range(0, 24, 4).map(v => ({raw:v, lab:v})), y: range(0, 24, 4).map(v => ({raw:v, lab:v})),
+           t:["Al₂O₃ (% of the pot)", "MgO (% of the pot)"]},
+  CENTER: {x: range(-12, 12, 4).map(v => ({raw:mAl + v, lab:v})), y: range(-12, 12, 4).map(v => ({raw:mMg + v, lab:v})),
+           t:["Al₂O₃ minus its average", "MgO minus its average"]},
+  STD:    {x: range(-3, 3, 1).map(v => ({raw:mAl + v * sAl, lab:v})), y: range(-3, 3, 1).map(v => ({raw:mMg + v * sMg, lab:v})),
+           t:["Al₂O₃ (SDs from average)", "MgO (SDs from average)"]}
+};
+const layDom = d => POTS.map(p => ({x:mX(p.al, d.x), y:mY(p.mg, d.y)}));
+const rot = (x, y, phi) => { const c = Math.cos(phi * D2R), s = Math.sin(phi * D2R); return [x * c - y * s, x * s + y * c]; };
+const layRot = phi => Z.map(z => { const [x, y] = rot(z[0], z[1], phi); return toS(x, y, ZS); });
+const layNine = () => POTS.map(p => toS(p.d1, p.d2, NS));
+
+/* ---------- drawing helpers ---------- */
+const n1 = v => v.toFixed(1);
+function axes({xt, yt, mx, my, xtitle, ytitle, op = 1, zero = false, grid = true}){
+  if (op <= 0.001) return '';
+  let s = `<g opacity="${op.toFixed(3)}">`;
+  xt.forEach(t => { const x = mx(t.raw); if (x < G.L - 1 || x > G.R + 1) return;
+    if (grid) s += `<line class="grid" x1="${n1(x)}" y1="${G.T}" x2="${n1(x)}" y2="${G.B}"/>`;
+    s += `<text class="tick" x="${n1(x)}" y="${G.B + 22}" text-anchor="middle">${fmt(t.lab, Number.isInteger(t.lab) ? 0 : 1)}</text>`; });
+  yt.forEach(t => { const y = my(t.raw); if (y < G.T - 1 || y > G.B + 1) return;
+    if (grid) s += `<line class="grid" x1="${G.L}" y1="${n1(y)}" x2="${G.R}" y2="${n1(y)}"/>`;
+    s += `<text class="tick" x="${G.L - 10}" y="${n1(y)}" text-anchor="end" dominant-baseline="middle">${fmt(t.lab, Number.isInteger(t.lab) ? 0 : 1)}</text>`; });
+  if (zero){ const x0 = mx(zero[0]), y0 = my(zero[1]);
+    s += `<line class="zero" x1="${n1(x0)}" y1="${G.T}" x2="${n1(x0)}" y2="${G.B}"/><line class="zero" x1="${G.L}" y1="${n1(y0)}" x2="${G.R}" y2="${n1(y0)}"/>`; }
+  s += `<text class="atitle" x="${G.cx}" y="${G.B + 52}" text-anchor="middle">${xtitle}</text>`;
+  s += `<text class="atitle" transform="translate(20 ${G.cy}) rotate(-90)" text-anchor="middle">${ytitle}</text>`;
+  return s + '</g>';
+}
+const frameRect = () => `<rect class="frame" x="${G.L}" y="${G.T}" width="${G.W}" height="${G.H}"/>`;
+function domAxes(d, key, op){ const k = TK[key];
+  return axes({xt:k.x, yt:k.y, mx:v => mX(v, d.x), my:v => mY(v, d.y), xtitle:k.t[0], ytitle:k.t[1], op,
+    zero: key === 'STD' ? [mAl, mMg] : false}); }
+function zAxes(s, op, xtitle, ytitle, ticks){
+  const t = ticks.map(v => ({raw:v * (ticks.unit || 1), lab:v}));
+  return axes({xt:t, yt:t, mx:v => toS(v, 0, s).x, my:v => toS(0, v, s).y, xtitle, ytitle, op, zero:[0, 0]}); }
+function arrow(x1, y1, x2, y2, cls, fillCls, head = 10){
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy); if (L < 1) return '';
+  const ux = dx / L, uy = dy / L, bx = x2 - ux * head, by = y2 - uy * head;
+  return `<line class="${cls}" x1="${n1(x1)}" y1="${n1(y1)}" x2="${n1(bx)}" y2="${n1(by)}"/>` +
+    `<polygon class="${fillCls}" points="${n1(x2)},${n1(y2)} ${n1(bx - uy * head * .45)},${n1(by + ux * head * .45)} ${n1(bx + uy * head * .45)},${n1(by - ux * head * .45)}"/>`;
+}
+function zLine(deg, cls, s = ZS, ext = 6){ const [ux, uy] = uv(deg); const a = toS(-ext * ux, -ext * uy, s), b = toS(ext * ux, ext * uy, s);
+  return `<line class="${cls}" x1="${n1(a.x)}" y1="${n1(a.y)}" x2="${n1(b.x)}" y2="${n1(b.y)}"/>`; }
+function shadows(deg, dotCls){ const [ux, uy] = uv(deg); let s = '';
+  Z.forEach((z, i) => { const k = z[0] * ux + z[1] * uy, f = toS(k * ux, k * uy, ZS), p = toS(z[0], z[1], ZS), c = REGC[POTS[i].region];
+    s += `<line class="proj" x1="${n1(p.x)}" y1="${n1(p.y)}" x2="${n1(f.x)}" y2="${n1(f.y)}" style="stroke:${c}"/>`;
+    s += `<circle cx="${n1(f.x)}" cy="${n1(f.y)}" r="3.4" style="fill:${c}"/>`; });
+  return s; }
+function lineLabel(deg, text, cls, s = ZS, at = 3.25){ const [ux, uy] = uv(deg); const p = toS(at * ux, at * uy, s);
+  return `<text class="lbl ${cls}" x="${n1(p.x)}" y="${n1(p.y - 10)}" text-anchor="middle">${text}</text>`; }
+function regionLabels(op = 1, alt = false){ const off = alt ? {"Gloucester":[-2.1, 1.9], "Wales":[0.5, -1.65], "New Forest":[0.1, -1.7]} : {"Gloucester":[0, 1.75], "Wales":[0.5, -1.65], "New Forest":[0.1, -1.7]}; let s = `<g opacity="${op}">`;
+  for (const r in CENT){ const p = toS(CENT[r][0] + off[r][0], CENT[r][1] + off[r][1], NS);
+    s += `<text class="lbl" x="${n1(p.x)}" y="${n1(p.y)}" text-anchor="middle" style="fill:${REGC[r]}">${r}</text>`; }
+  return s + '</g>'; }
+const LOFF = {MnO:[10, -8], K2O:[10, 12], Na2O:[-2, -10], Fe2O3:[12, -6], BaO:[-4, -8], CaO:[0, -10]};
+function chemArrows(scale, k = 1, stagger = 0, withNums = false, thin = false){ let s = '';
+  LD.forEach((l, j) => { const kj = stagger ? ease(clamp((k - j * stagger) / (1 - 8 * stagger))) : k;
+    const mainly1 = Math.abs(l.d1) >= Math.abs(l.d2);
+    const o = toS(0, 0, NS), p = toS(l.d1 * scale * kj, l.d2 * scale * kj, NS);
+    s += arrow(o.x, o.y, p.x, p.y, (mainly1 ? 'l1' : 'l2') + (thin ? '" style="stroke-width:2.2' : ''), mainly1 ? 'f1' : 'f2', 10);
+    if (kj > .85){ const L = Math.hypot(p.x - o.x, p.y - o.y) || 1, ux = (p.x - o.x) / L, uy = (p.y - o.y) / L, off = LOFF[l.name] || [0, 0];
+      const tx = p.x + ux * 18 + off[0], ty = p.y + uy * 16 + off[1] + 5;
+      s += `<text class="lbl ${mainly1 ? 't1' : 't2'}" x="${n1(tx)}" y="${n1(ty)}" text-anchor="${ux > .3 ? 'start' : ux < -.3 ? 'end' : 'middle'}" opacity="${((kj - .85) / .15).toFixed(2)}">${NICE[l.name]}</text>`; }
+  });
+  return s; }
+
+/* ---------- step 2 phases ---------- */
+const PH = [['FIT','FIT',.06],['FIT','RULER',.30],['RULER','RULER',.38],['RULER','CENTER',.62],['CENTER','CENTER',.70],['CENTER','STD',.94],['STD','STD',1]];
+function phase(t){ let prev = 0; for (const [a, b, end] of PH){ if (t <= end){ const k = end > prev ? (t - prev) / (end - prev) : 1; return {a, b, k:a === b ? 1 : ease(clamp(k))}; } prev = end; } return {a:'STD', b:'STD', k:1}; }
+
+/* ---------- step 3 state ---------- */
+let userTheta = null, seek = null;
+function sweepTheta(t){ if (REDUCED) return 20; return t < .7 ? 180 * ease(t / .7) : lerp(180, 20, ease((t - .7) / .3)); }
+function theta(t){ if (seek){ const k = clamp((performance.now() - seek.start) / seek.dur); const v = lerp(seek.from, seek.to, ease(k)); if (k >= 1){ userTheta = seek.to; seek = null; } return v; }
+  return userTheta !== null ? userTheta : sweepTheta(t); }
+let lastTheta = 20;
+
+/* ---------- steps ---------- */
+const E1 = fmt(EV1), E2 = fmt(EV2), P1 = pct(EV1, 2), P2 = pct(EV2, 2);
+const ratio = Math.round(SDS.find(s => s.name === 'Al2O3').sd / SDS.find(s => s.name === 'MnO').sd);
+const ld = n => LD.find(l => l.name === n);
+const STEPS = [
+{ title:"Two of the nine measurements", dur:900,
+  body:`<p>Each of the 48 Roman pots in the pre-lecture data has nine chemical measurements. A scatterplot can show only two at a time, and there are 36 possible pairs.</p>
+  <p>Here are two of them, aluminium oxide (Al₂O₃) and magnesium oxide (MgO). Each dot is one pot, colored by the region it was found in.</p>
+  <p>The dots lean along a diagonal. Pots with more aluminium tend to have less magnesium (correlation ${fmt(R)}). PCA finds new axes that follow patterns like this one. We will build them by hand with these two chemicals first, then use all nine.</p>`,
+  pts: () => ({pos:layDom(DOM.FIT), op:1}),
+  axes: () => domAxes(DOM.FIT, 'FIT', 1) + frameRect() },
+
+{ title:"Center and scale", dur:5400,
+  body:`<p>Before PCA, every chemical gets the same ruler. This is what <code>scale()</code> does in the pre-lecture. Watch the three moves.</p>
+  <p><b>Center.</b> Subtract each chemical's average. The average pot moves to the middle, at (0, 0).</p>
+  <p><b>Scale.</b> Divide by each chemical's standard deviation. Both axes now count standard deviations (SDs) from the average.</p>`,
+  widget: () => `<ol class="chips" id="chips"><li><b>1</b>Same ruler for both</li><li><b>2</b>Center</li><li><b>3</b>Scale</li></ol>
+    <div class="panel mini"><h3>Spread (SD) of all nine chemicals</h3><svg id="sdbars" viewBox="0 0 360 160" role="img" aria-label="Standard deviation of each chemical before and after scaling"></svg>
+    <p class="cap">Before scaling, Al₂O₃ spreads about ${ratio} times more than MnO. PCA would chase Al₂O₃ just because its numbers are bigger. After scaling, every SD is 1.</p></div>`,
+  pts: t => { const p = phase(t); return {pos:layDom(lerpDom(DOM[p.a], DOM[p.b], p.k)), op:1}; },
+  axes: t => { const p = phase(t), d = lerpDom(DOM[p.a], DOM[p.b], p.k);
+    return (p.a === p.b ? domAxes(d, p.a, 1) : domAxes(d, p.a, 1 - p.k) + domAxes(d, p.b, p.k)) + frameRect(); },
+  over: t => { const p = phase(t), d = lerpDom(DOM[p.a], DOM[p.b], p.k);
+    const op = p.a === 'FIT' ? (p.b === 'RULER' ? p.k : 0) : (p.b === 'STD' || p.a === 'STD' ? 1 : 1);
+    if (op <= 0 || t < .06) return ''; const x = mX(mAl, d.x), y = mY(mMg, d.y);
+    return `<g opacity="${op.toFixed(2)}" clip-path="url(#plotclip)"><line class="cross" x1="${n1(x)}" y1="${G.T}" x2="${n1(x)}" y2="${G.B}"/><line class="cross" x1="${G.L}" y1="${n1(y)}" x2="${G.R}" y2="${n1(y)}"/>
+      <text class="lbl small" x="${n1(x + 10)}" y="${n1(y - 12)}">average pot</text></g>`; },
+  tick: t => { const p = phase(t); const ph = t < .06 ? -1 : (p.b === 'RULER' || p.a === 'RULER' && p.b === 'RULER') ? 0 : (p.b === 'CENTER') ? 1 : 2;
+    document.querySelectorAll('#chips li').forEach((li, i) => li.classList.toggle('on', i === ph));
+    const k = p.a === 'CENTER' && p.b === 'STD' ? p.k : p.a === 'STD' ? 1 : 0;
+    const svg = document.getElementById('sdbars'); if (!svg) return;
+    const top = 3, h = 100, base = 122, bw = 26, gap = 360 / 9; let s = `<line x1="4" y1="${base}" x2="356" y2="${base}" class="frame" style="stroke:var(--rule)"/>`;
+    SDS.forEach((c, i) => { const v = lerp(c.sd, 1, k), bh = v / top * h, x = i * gap + (gap - bw) / 2;
+      s += `<rect x="${n1(x)}" y="${n1(base - bh)}" width="${bw}" height="${n1(Math.max(bh, .6))}" rx="2" style="fill:${c.name === 'Al2O3' ? 'var(--pc1)' : c.name === 'MnO' ? 'var(--pc2)' : 'var(--muted)'}"/>`;
+      s += `<text x="${n1(x + bw / 2)}" y="${n1(base - bh - 6)}" text-anchor="middle" style="fill:var(--ink); font:11px var(--mono)">${v < .01 ? v.toFixed(3) : v.toFixed(2)}</text>`;
+      s += `<text x="${n1(x + bw / 2)}" y="${base + 18}" text-anchor="middle" style="fill:var(--muted); font:11.5px var(--body)">${NICE[c.name]}</text>`; });
+    svg.innerHTML = s; } },
+
+{ title:"Spin a line, measure the spread", dur:5600,
+  body:`<p>Draw a line through the center. Drop every pot straight onto the line, like a shadow. The shadows are the pots' positions along that line.</p>
+  <p>Along some lines the shadows bunch up. Along others they spread out. Spread is measured as variance. For two scaled chemicals the total is 2.00, one for each.</p>
+  <p>Drag the slider and find the angle with the biggest spread.</p>`,
+  widget: () => { let path = ''; for (let a = 0; a <= 180; a += 2){ const x = 34 + a / 180 * 310, y = 118 - spread(a) / 2 * 100; path += (a ? 'L' : 'M') + n1(x) + ' ' + n1(y); }
+    return `<div class="panel"><label class="row" for="angle"><span>Line angle</span><output id="angout">0°</output></label>
+      <input type="range" id="angle" min="0" max="180" step="1" value="0">
+      <div class="meter" aria-hidden="true"><div id="mfill"></div></div>
+      <p class="cap" style="color:var(--ink)">Spread along the line: <span class="num" id="spr">1.00</span> of 2.00 total</p>
+      <div class="mini"><svg id="curve" viewBox="0 0 360 150" role="img" aria-label="Spread of the shadows at each angle">
+        <line x1="34" y1="118" x2="344" y2="118" style="stroke:var(--rule)"/><line x1="34" y1="18" x2="344" y2="18" style="stroke:var(--grid)"/><line x1="34" y1="68" x2="344" y2="68" style="stroke:var(--grid)"/>
+        <text x="28" y="122" text-anchor="end" style="fill:var(--muted); font:11px var(--mono)">0</text><text x="28" y="72" text-anchor="end" style="fill:var(--muted); font:11px var(--mono)">1</text><text x="28" y="22" text-anchor="end" style="fill:var(--muted); font:11px var(--mono)">2</text>
+        <text x="34" y="136" text-anchor="middle" style="fill:var(--muted); font:11px var(--mono)">0°</text><text x="189" y="136" text-anchor="middle" style="fill:var(--muted); font:11px var(--mono)">90°</text><text x="344" y="136" text-anchor="middle" style="fill:var(--muted); font:11px var(--mono)">180°</text>
+        <path d="${path}" style="fill:none; stroke:var(--pc1); stroke-width:2"/>
+        <line id="cline" x1="0" y1="18" x2="0" y2="118" style="stroke:var(--ink); stroke-dasharray:3 3; opacity:.5"/>
+        <circle id="cmark" r="5" cx="34" cy="68" style="fill:var(--ink)"/>
+        <text x="189" y="148" text-anchor="middle" style="fill:var(--muted); font:11.5px var(--body)">spread at each angle</text></svg></div>
+      <div><button id="best" type="button">Show the best line</button></div></div>`; },
+  live: () => !!seek,
+  pts: () => ({pos:layDom(DOM.STD), op:1}),
+  axes: () => domAxes(DOM.STD, 'STD', 1) + frameRect(),
+  under: t => { const th = theta(t); lastTheta = th; return shadows(th) + zLine(th, 'lt'); },
+  tick: () => { const th = lastTheta, sp = spread(th);
+    const a = document.getElementById('angle'); if (!a) return;
+    if (document.activeElement !== a) a.value = Math.round(th);
+    document.getElementById('angout').textContent = Math.round(th) + '°';
+    document.getElementById('spr').textContent = sp.toFixed(2);
+    document.getElementById('mfill').style.width = (sp / 2 * 100).toFixed(1) + '%';
+    const x = 34 + th / 180 * 310, y = 118 - sp / 2 * 100;
+    const m = document.getElementById('cmark'); m.setAttribute('cx', n1(x)); m.setAttribute('cy', n1(y));
+    const l = document.getElementById('cline'); l.setAttribute('x1', n1(x)); l.setAttribute('x2', n1(x)); },
+  enter: () => { userTheta = null; seek = null;
+    document.getElementById('angle').addEventListener('input', e => { seek = null; userTheta = +e.target.value; requestRender(); });
+    document.getElementById('best').addEventListener('click', () => { const from = userTheta !== null ? userTheta : lastTheta;
+      seek = {from, to:PC1A, start:performance.now(), dur:REDUCED ? 1 : 900}; userTheta = from; requestRender(); }); } },
+
+{ title:"The line with the most spread is PC1", dur:900,
+  body:`<p>The widest spread is at ${Math.round(PC1A)}°. This line points toward more magnesium and less aluminium. It is the first principal component, <b>PC1</b>.</p>
+  <p>The variance of the shadows along PC1 is ${E1}. That number is PC1's <b>eigenvalue</b>. It is ${P1}% of the total, so one new axis keeps most of what the two old axes showed.</p>
+  <p>Look at the shadows on the line. Wales pots land at one end, New Forest pots at the other, and Gloucester pots in between.</p>`,
+  widget: () => `<div class="panel"><div class="big"><div><span class="num c1">${E1}</span><small>eigenvalue of PC1</small></div><div><span class="num">${P1}%</span><small>of the total spread (2.00)</small></div></div></div>`,
+  pts: () => ({pos:layDom(DOM.STD), op:1}),
+  axes: () => domAxes(DOM.STD, 'STD', 1) + frameRect(),
+  under: () => shadows(PC1A) + zLine(PC1A, 'l1'),
+  over: () => lineLabel(PC1A, 'PC1', 't1') },
+
+{ title:"PC2 sits at a right angle", dur:900,
+  body:`<p>The second component must be perpendicular to PC1. That way it repeats nothing PC1 already holds. It catches the spread PC1 missed.</p>
+  <p>PC2's eigenvalue is ${E2}, or ${P2}%. With two chemicals there are only two components, and together they hold all of the variance.</p>
+  <p>With nine chemicals PCA keeps going. PC3 is perpendicular to both PC1 and PC2 and takes the most spread that is left, and so on down to PC9.</p>`,
+  widget: () => `<div class="panel"><div class="big"><div><span class="num c1">${E1}</span><small>PC1 · ${P1}%</small></div><div><span class="num c2">${E2}</span><small>PC2 · ${P2}%</small></div><div><span class="num">${fmt(EV1 + EV2)}</span><small>together · 100%</small></div></div></div>`,
+  pts: () => ({pos:layDom(DOM.STD), op:1}),
+  axes: () => domAxes(DOM.STD, 'STD', 1) + frameRect(),
+  under: () => shadows(PC2A) + zLine(PC1A, 'l1') + zLine(PC2A, 'l2'),
+  over: () => { const a = toS(0, 0, ZS), s = 12, [x1, y1] = uv(PC1A), [x2, y2] = uv(PC2A);
+    const p1 = {x:a.x + x1 * s, y:a.y - y1 * s}, p2 = {x:a.x + x2 * s, y:a.y - y2 * s}, p3 = {x:p1.x + x2 * s, y:p1.y - y2 * s};
+    return `<polyline points="${n1(p1.x)},${n1(p1.y)} ${n1(p3.x)},${n1(p3.y)} ${n1(p2.x)},${n1(p2.y)}" style="fill:none; stroke:var(--ink); stroke-width:1.5"/>` +
+      lineLabel(PC1A, 'PC1', 't1') + lineLabel(PC2A, 'PC2', 't2', ZS, 2.6); } },
+
+{ title:"Turn the picture", dur:2800,
+  body:`<p>Now rotate the whole cloud until PC1 lies flat. The pots do not change. Only our point of view turns.</p>
+  <p>Each pot's new coordinates are its <b>scores</b>. A pot far to the right has a high PC1 score. In R the scores are in <code>pca$ind$coord</code>.</p>
+  <p>The grey arrows are the old axes. They turn with the data, so you can still see which way "more Al₂O₃" and "more MgO" point now.</p>`,
+  pts: t => ({pos:layRot(-PC1A * ease(clamp((t - .15) / .7))), op:1}),
+  axes: t => domAxes(DOM.STD, 'STD', 1 - clamp(t / .15)) + zAxes(ZS, clamp((t - .8) / .2), `PC1 score (${P1}%)`, `PC2 score (${P2}%)`, range(-3, 3, 1)) + frameRect(),
+  under: t => { const phi = -PC1A * ease(clamp((t - .15) / .7)); return zLine(PC1A + phi, 'l1') + zLine(PC2A + phi, 'l2'); },
+  over: t => { const phi = -PC1A * ease(clamp((t - .15) / .7)); const o = toS(0, 0, ZS); let s = '';
+    [["Al₂O₃", 1, 0], ["MgO", 0, 1]].forEach(([nm, x, y]) => { const [rx, ry] = rot(x * 2.6, y * 2.6, phi), p = toS(rx, ry, ZS);
+      s += arrow(o.x, o.y, p.x, p.y, 'old', 'fm', 11);
+      const [lx, ly] = rot(x * 3.05, y * 3.05, phi), q = toS(lx, ly, ZS);
+      s += `<text class="lbl" x="${n1(q.x)}" y="${n1(q.y + 5)}" text-anchor="middle" style="fill:var(--muted)">${nm}</text>`; });
+    return s + lineLabel(PC1A + phi, 'PC1', 't1', ZS, 3.25) + lineLabel(PC2A + phi, 'PC2', 't2', ZS, 3.0); } },
+
+{ title:"Loadings say what an axis means", dur:1400,
+  body:`<p>A <b>loading</b> is the correlation between an original chemical and a component, so it runs from −1 to 1. In R the loadings are in <code>pca$var$coord</code>.</p>
+  <p>MgO's loading on PC1 is ${sgn(LOAD2["MgO"][0])}, so pots further right have more magnesium. Al₂O₃'s loading on PC1 is ${sgn(LOAD2["Al₂O₃"][0])}, so pots further right have less aluminium.</p>
+  <p>A minus sign does not make a chemical unimportant. It means the chemical goes down as the component goes up. The size of the number shows how strong the link is.</p>
+  <p>The signs are arbitrary. Software can flip a whole component and the meaning stays the same.</p>`,
+  widget: () => `<div class="panel"><h3>Loadings, two-chemical example</h3><table><thead><tr><th>Chemical</th><th>PC1</th><th>PC2</th></tr></thead><tbody>
+    ${Object.entries(LOAD2).map(([k, v]) => `<tr><td>${k}</td><td class="num ${Math.abs(v[0]) > .5 ? 'hi' : 'lo'}">${sgn(v[0])}</td><td class="num ${Math.abs(v[1]) > .5 ? 'hi' : 'lo'}">${sgn(v[1])}</td></tr>`).join('')}
+    </tbody></table><p class="cap">The arrows grow from the old axes (length 1) to the loadings. Each one stretches by the square root of its component's eigenvalue.</p></div>`,
+  pts: () => ({pos:layRot(-PC1A), op:.22}),
+  axes: () => zAxes(ZS, 1, `PC1 score (${P1}%)`, `PC2 score (${P2}%)`, range(-3, 3, 1)) + frameRect(),
+  under: () => { const o = toS(0, 0, ZS), r = toS(2.6, 0, ZS).x - o.x; return `<circle class="circ" cx="${n1(o.x)}" cy="${n1(o.y)}" r="${n1(r)}"/>`; },
+  over: t => { const k = ease(t), o = toS(0, 0, ZS); let s = '';
+    [["Al₂O₃", U1[0], U2[0]], ["MgO", U1[1], U2[1]]].forEach(([nm, a, b]) => { const L = LOAD2[nm];
+      const x = lerp(a, L[0], k) * 2.6, y = lerp(b, L[1], k) * 2.6, p = toS(x, y, ZS);
+      s += arrow(o.x, o.y, p.x, p.y, 'lt', 'fi', 11);
+      const q = toS(x * 1.12, y * 1.12 - .32, ZS);
+      s += `<text class="lbl" x="${n1(q.x)}" y="${n1(q.y)}" text-anchor="middle">${nm}</text>`;
+      if (t > .7) s += `<text class="lbl small" x="${n1(q.x)}" y="${n1(q.y + 20)}" text-anchor="middle" opacity="${((t - .7) / .3).toFixed(2)}">${sgn(L[0])}, ${sgn(L[1])}</text>`; });
+    return s; } },
+
+{ title:"Nine chemicals, nine components", dur:1900,
+  body:`<p>With all nine scaled chemicals the total variance is 9. PCA finds nine perpendicular directions, each one with the most spread left over. Nobody can draw nine dimensions, but the math is the same line spinning you just did.</p>
+  <p>This is the scree plot from the pre-lecture. PC1 holds ${EIG[0].pct.toFixed(1)}% and PC2 holds ${EIG[1].pct.toFixed(1)}%, so a two-axis plot shows ${EIG[1].cum.toFixed(1)}% of the variation.</p>
+  <p>To read a scree plot, look for the elbow, where the bars stop dropping fast. Here the drop flattens after PC3. Each component after that adds little.</p>`,
+  widget: () => `<div class="panel"><h3>Eigenvalues, all nine chemicals</h3><div class="tablewrap"><table><thead><tr><th>Component</th><th>Eigenvalue</th><th>% of 9</th><th>Running %</th></tr></thead><tbody>
+    ${EIG.map((e, i) => `<tr><td>PC${i + 1}</td><td class="num">${e.ev.toFixed(2)}</td><td class="num">${e.pct.toFixed(1)}</td><td class="num">${e.cum.toFixed(1)}</td></tr>`).join('')}
+    </tbody></table></div><p class="cap">Each percentage is the eigenvalue divided by 9.</p></div>`,
+  pts: () => ({pos:layRot(-PC1A), op:0}),
+  axes: () => { const ymax = 50, my = v => G.B - v / ymax * G.H; let s = '';
+    [0, 10, 20, 30, 40, 50].forEach(v => { s += `<line class="grid" x1="${G.L}" y1="${n1(my(v))}" x2="${G.R}" y2="${n1(my(v))}"/><text class="tick" x="${G.L - 10}" y="${n1(my(v))}" text-anchor="end" dominant-baseline="middle">${v}</text>`; });
+    EIG.forEach((e, i) => { const x = G.L + (i + .5) * G.W / 9; s += `<text class="tick" x="${n1(x)}" y="${G.B + 22}" text-anchor="middle">PC${i + 1}</text>`; });
+    s += `<text class="atitle" x="${G.cx}" y="${G.B + 52}" text-anchor="middle">Component</text><text class="atitle" transform="translate(20 ${G.cy}) rotate(-90)" text-anchor="middle">Variance explained (%)</text>`;
+    return s + frameRect(); },
+  over: t => { const ymax = 50, my = v => G.B - v / ymax * G.H, bw = G.W / 9 * .62; let s = '';
+    EIG.forEach((e, i) => { const k = REDUCED ? 1 : ease(clamp((t - i * .05) / .5)), x = G.L + (i + .5) * G.W / 9, h = e.pct / ymax * G.H * k;
+      const cls = i === 0 ? 'f1' : i === 1 ? 'f2' : 'fm';
+      s += `<rect class="${cls}" x="${n1(x - bw / 2)}" y="${n1(G.B - h)}" width="${n1(bw)}" height="${n1(h)}" rx="2" ${i > 1 ? 'opacity=".55"' : ''}/>`;
+      if (k > .95) s += `<text class="tick" x="${n1(x)}" y="${n1(G.B - h - 8)}" text-anchor="middle" style="fill:var(--ink)">${e.pct.toFixed(1)}</text>`; });
+    if (t > .75){ const op = ((t - .75) / .25).toFixed(2), x1 = G.L + .5 * G.W / 9, x2 = G.L + 1.5 * G.W / 9, y = my(EIG[0].pct) - 34;
+      s += `<g opacity="${op}"><polyline points="${n1(x1)},${n1(y + 8)} ${n1(x1)},${n1(y)} ${n1(x2)},${n1(y)} ${n1(x2)},${n1(y + 8)}" style="fill:none; stroke:var(--ink); stroke-width:1.5"/>
+        <text class="lbl small" x="${n1(x2 + 10)}" y="${n1(y + 5)}">PC1 + PC2 = ${EIG[1].cum.toFixed(1)}%</text>`;
+      const xe = G.L + 3.5 * G.W / 9, ye = my(EIG[3].pct) - 26, xt = G.L + 4.9 * G.W / 9, yt = my(24);
+      s += arrow(xt - 8, yt + 8, xe + 6, ye, 'lt', 'fi', 9) + `<text class="lbl small" x="${n1(xt)}" y="${n1(yt)}">the drop flattens after PC3</text></g>`; }
+    return s; } },
+
+{ title:"Where the pots land", dur:1500,
+  body:`<p>Every pot gets a score on each component, computed from all nine chemicals. This map plots PC1 against PC2. It is the same plot as in the pre-lecture.</p>
+  <p>Pots from the same region land close together, which means their chemistry is similar. New Forest pots sit on the left, Wales pots on the right, and Gloucester pots at the top.</p>
+  <p>Tap or hover over a pot to see where it came from.</p>`,
+  widget: () => `<div class="panel"><h3>Selected pot</h3><p id="potinfo" class="cap">Tap or hover over a dot.</p></div>`,
+  pick: true,
+  pts: () => ({pos:layNine(), op:1}),
+  axes: () => zAxes(NS, 1, `PC1 (${EIG[0].pct.toFixed(1)}%)`, `PC2 (${EIG[1].pct.toFixed(1)}%)`, range(-4, 4, 2)) + frameRect(),
+  over: t => regionLabels(clamp((t - .5) / .5).toFixed(2)) },
+
+{ title:"What PC1 and PC2 mean", dur:1800,
+  body:`<p>Each arrow is one chemical. Its tip sits at the chemical's two loadings, PC1 across and PC2 up. The dashed blue lines mark ±0.5, the cut-off used in the pre-lecture.</p>
+  <p><b class="c1">PC1</b> grows with MgO, K₂O, MnO and Fe₂O₃, and shrinks with Al₂O₃ and TiO₂.</p>
+  <p><b class="c2">PC2</b> grows with CaO, Na₂O, Fe₂O₃, Al₂O₃ and BaO.</p>
+  <p>Arrows that reach close to the circle are shown well by this map. Arrows that point the same way belong to chemicals that rise and fall together.</p>`,
+  widget: () => `<div class="panel"><h3>Loadings, all nine chemicals</h3><div class="tablewrap"><table><thead><tr><th>Chemical</th><th>PC1</th><th>PC2</th></tr></thead><tbody>
+    ${LD.map(l => `<tr><td>${NICE[l.name]}</td><td class="num ${Math.abs(l.d1) > .5 ? 'hi' : 'lo'}">${sgn(l.d1)}</td><td class="num ${Math.abs(l.d2) > .5 ? 'hi' : 'lo'}">${sgn(l.d2)}</td></tr>`).join('')}
+    </tbody></table></div><p class="cap">Shaded cells are beyond ±0.5. Blue arrows lean mostly along PC1, green arrows mostly along PC2.</p></div>`,
+  pts: () => ({pos:layNine(), op:.14}),
+  axes: () => { const t = [-1, -.5, 0, .5, 1].map(v => ({raw:v * 4, lab:v}));
+    return axes({xt:t, yt:t, mx:v => toS(v, 0, NS).x, my:v => toS(0, v, NS).y, xtitle:'Loading on PC1', ytitle:'Loading on PC2', zero:[0, 0]}) + frameRect(); },
+  under: () => { const o = toS(0, 0, NS), r = toS(4, 0, NS).x - o.x, a = toS(2, 0, NS).x, b = toS(-2, 0, NS).x, c = toS(0, 2, NS).y, d = toS(0, -2, NS).y;
+    return `<circle class="circ" cx="${n1(o.x)}" cy="${n1(o.y)}" r="${n1(r)}"/>` +
+      [a, b].map(x => `<line class="thresh" x1="${n1(x)}" y1="${G.T}" x2="${n1(x)}" y2="${G.B}"/>`).join('') +
+      [c, d].map(y => `<line class="thresh" x1="${G.L}" y1="${n1(y)}" x2="${G.R}" y2="${n1(y)}"/>`).join(''); },
+  over: t => chemArrows(4, REDUCED ? 1 : t, .06) },
+
+{ title:"Read the pots and arrows together", dur:1500,
+  body:`<p>Put the two maps on top of each other. A pot sits toward the arrows of the chemicals it has the most of.</p>
+  <p>Wales pots lie toward MgO, K₂O and MnO, so they are rich in magnesium, potassium and manganese. New Forest pots lie toward Al₂O₃ and TiO₂ and are low in almost everything else. Gloucester pots sit up toward CaO, Na₂O and Fe₂O₃.</p>
+  <p>The arrows here are stretched to fit the pots' scale. Read their directions, not their lengths.</p>`,
+  widget: () => `<div class="panel"><h3>Reading any PCA</h3><ol class="rules">
+    <li>Scale first when the variables use different units.</li>
+    <li>Eigenvalues and the scree plot say how much each component holds.</li>
+    <li>Loadings say what each component means. Look for values beyond ±0.5.</li>
+    <li>Scores say where each observation lands. Points close together are similar.</li>
+    <li>PCA explores. It shows patterns but does not test them, and the names you give components are your own reading.</li></ol>
+    <p id="potinfo" class="cap">Tap or hover over a pot to see where it came from.</p></div>`,
+  pick: true,
+  pts: () => ({pos:layNine(), op:1}),
+  axes: () => zAxes(NS, 1, `PC1 (${EIG[0].pct.toFixed(1)}%)`, `PC2 (${EIG[1].pct.toFixed(1)}%)`, range(-4, 4, 2)) + frameRect(),
+  over: t => chemArrows(3.4, REDUCED ? 1 : t, .04, false, true) + regionLabels(clamp((t - .4) / .6).toFixed(2), true) }
+];
+
+/* ---------- engine ---------- */
+const $ = id => document.getElementById(id);
+const svg = $('stage'), axesG = $('axesG'), underG = $('underG'), ptsG = $('ptsG'), overG = $('overG');
+const circles = POTS.map((p, i) => { const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('r', '6'); c.setAttribute('class', 'pot'); c.style.fill = REGC[p.region];
+  const tt = document.createElementNS('http://www.w3.org/2000/svg', 'title'); tt.textContent = `${p.id} · ${p.region}`; c.appendChild(tt);
+  c.addEventListener('pointerenter', () => pickPot(i)); c.addEventListener('click', () => pickPot(i));
+  ptsG.appendChild(c); return c; });
+let idx = 0, t0 = 0, from = null, raf = null, sel = -1;
+let cur = layDom(DOM.FIT).map(p => ({x:p.x, y:p.y, o:1}));
+
+function pickPot(i){ if (!STEPS[idx].pick) return; const info = $('potinfo'); if (!info) return; const p = POTS[i];
+  if (sel >= 0) circles[sel].classList.remove('sel'); sel = i; circles[i].classList.add('sel');
+  info.style.color = 'var(--ink)';
+  info.innerHTML = `<b>${p.id}</b> · ${p.region} region, ${p.kiln} kiln · PC1 <span class="num">${fmt(p.d1)}</span>, PC2 <span class="num">${fmt(p.d2)}</span> · Al₂O₃ ${p.al}%, MgO ${p.mg}%`; }
+
+function render(now){
+  const s = STEPS[idx], el = now - t0, dur = REDUCED ? 0 : s.dur;
+  const t = dur ? clamp(el / dur) : 1, blend = REDUCED ? 1 : ease(clamp(el / 700)), fade = REDUCED ? 1 : clamp(el / 420);
+  const tg = s.pts(t);
+  cur = tg.pos.map((p, i) => { const f = from[i], o = Array.isArray(tg.op) ? tg.op[i] : tg.op;
+    return {x:lerp(f.x, p.x, blend), y:lerp(f.y, p.y, blend), o:lerp(f.o, o, blend)}; });
+  cur.forEach((p, i) => { const c = circles[i]; c.setAttribute('cx', n1(p.x)); c.setAttribute('cy', n1(p.y)); c.setAttribute('opacity', p.o.toFixed(3));
+    c.style.pointerEvents = p.o < .3 ? 'none' : ''; });
+  axesG.innerHTML = s.axes ? s.axes(t) : ''; axesG.setAttribute('opacity', fade);
+  underG.innerHTML = s.under ? s.under(t) : ''; underG.setAttribute('opacity', fade);
+  overG.innerHTML = s.over ? s.over(t) : ''; overG.setAttribute('opacity', fade);
+  if (s.tick) s.tick(t);
+  return t < 1 || blend < 1 || fade < 1 || (s.live && s.live());
+}
+function loop(now){ raf = render(now) ? requestAnimationFrame(loop) : null; }
+function requestRender(){ if (!raf) raf = requestAnimationFrame(loop); }
+
+function go(i){
+  idx = clamp(i, 0, STEPS.length - 1); const s = STEPS[idx];
+  from = cur.map(p => ({...p})); t0 = performance.now();
+  $('stepnum').textContent = idx + 1; $('steptitle').textContent = s.title; $('stepbody').innerHTML = s.body;
+  $('widget').innerHTML = s.widget ? s.widget() : '';
+  $('prev').disabled = idx === 0; $('next').disabled = idx === STEPS.length - 1;
+  $('next').textContent = idx === STEPS.length - 1 ? 'Done' : 'Next';
+  ptsG.classList.toggle('pick', !!s.pick);
+  if (sel >= 0){ circles[sel].classList.remove('sel'); sel = -1; }
+  document.querySelectorAll('#dots button').forEach((b, j) => { b.removeAttribute('aria-current'); if (j === idx) b.setAttribute('aria-current', 'step'); });
+  if (s.enter) s.enter();
+  const h = 'step-' + (idx + 1); if (location.hash.slice(1) !== h){ try { history.replaceState(null, '', '#' + h); } catch(e) {} }
+  if (raf) cancelAnimationFrame(raf); raf = null; requestRender();
+}
+
+$('stepcount').textContent = STEPS.length;
+$('dots').innerHTML = STEPS.map((s, i) => `<li><button type="button" aria-label="Step ${i + 1}: ${s.title}">${i + 1}</button></li>`).join('');
+document.querySelectorAll('#dots button').forEach((b, i) => b.addEventListener('click', () => go(i)));
+$('prev').addEventListener('click', () => go(idx - 1));
+$('next').addEventListener('click', () => go(idx + 1));
+$('replay').addEventListener('click', () => { if (idx === 1) cur = layDom(DOM.FIT).map(p => ({...p, o:1})); go(idx); });
+document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight') go(idx + 1); if (e.key === 'ArrowLeft') go(idx - 1); });
+function fromHash(){ const m = /^#step-(\d+)$/.exec(location.hash); return m ? clamp(+m[1] - 1, 0, STEPS.length - 1) : 0; }
+window.addEventListener('hashchange', () => { const i = fromHash(); if (i !== idx) go(i); });
+go(fromHash());
+</script>
+</body>
+</html>
